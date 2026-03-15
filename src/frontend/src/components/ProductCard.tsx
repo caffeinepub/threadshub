@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import type { Product } from "@/data/products";
 import { Link } from "@tanstack/react-router";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, ShoppingCart } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
@@ -69,7 +69,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         </p>
         <div className="flex items-center justify-between gap-2">
           <span className="font-sans font-bold text-lg text-foreground">
-            ${product.price.toFixed(2)}
+            Rs. {product.price.toFixed(0)}
           </span>
           <Button
             size="sm"
@@ -81,6 +81,22 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             Add
           </Button>
         </div>
+        {/* Shop Now Button */}
+        <Link
+          to="/product/$id"
+          params={{ id: product.id }}
+          className="block mt-3"
+        >
+          <Button
+            variant="outline"
+            size="sm"
+            data-ocid="product.shop_now_button"
+            className="w-full rounded-sm text-xs font-semibold uppercase tracking-widest gap-1.5 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+          >
+            <ShoppingCart className="h-3.5 w-3.5" />
+            Shop Now
+          </Button>
+        </Link>
       </div>
     </motion.div>
   );

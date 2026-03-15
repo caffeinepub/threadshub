@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
 import { Link } from "@tanstack/react-router";
-import { CheckCircle, Package } from "lucide-react";
+import { Banknote, CheckCircle, Package, Smartphone } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
@@ -16,6 +16,8 @@ interface FormData {
   zip: string;
   country: string;
 }
+
+type PaymentMethod = "cod" | "easypaisa";
 
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -29,6 +31,7 @@ export default function CheckoutPage() {
   });
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
   const [orderNum] = useState(
     () => `TH-${Math.floor(100000 + Math.random() * 900000)}`,
   );
@@ -106,6 +109,21 @@ export default function CheckoutPage() {
               <p className="font-display text-2xl font-bold text-primary">
                 {orderNum}
               </p>
+            </div>
+            <div className="mt-4 bg-secondary/30 rounded-sm px-6 py-4 inline-block text-left">
+              <p className="font-sans text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
+                Payment Method
+              </p>
+              <p className="font-sans text-sm font-medium">
+                {paymentMethod === "cod"
+                  ? "Cash on Delivery (COD)"
+                  : "EasyPaisa — 03041329809"}
+              </p>
+              {paymentMethod === "easypaisa" && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Please send your payment to confirm the order.
+                </p>
+              )}
             </div>
             <p className="mt-4 text-sm text-muted-foreground font-sans">
               A confirmation will be sent to <strong>{form.email}</strong>
@@ -211,7 +229,7 @@ export default function CheckoutPage() {
                         id="city"
                         value={form.city}
                         onChange={handleChange("city")}
-                        placeholder="New York"
+                        placeholder="Lahore"
                         className="mt-1 rounded-sm"
                         data-ocid="checkout.city_input"
                       />
@@ -232,7 +250,7 @@ export default function CheckoutPage() {
                         id="zip"
                         value={form.zip}
                         onChange={handleChange("zip")}
-                        placeholder="10001"
+                        placeholder="54000"
                         className="mt-1 rounded-sm"
                         data-ocid="checkout.zip_input"
                       />
@@ -253,7 +271,7 @@ export default function CheckoutPage() {
                         id="country"
                         value={form.country}
                         onChange={handleChange("country")}
-                        placeholder="United States"
+                        placeholder="Pakistan"
                         className="mt-1 rounded-sm"
                         data-ocid="checkout.country_input"
                       />
@@ -269,13 +287,94 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
+                {/* Payment Method */}
+                <div>
+                  <h2 className="font-display text-xl font-semibold mb-4">
+                    Payment Method
+                  </h2>
+                  <div className="space-y-3">
+                    {/* COD Option */}
+                    <label
+                      htmlFor="payment-cod"
+                      className={`flex items-start gap-4 p-4 rounded-sm border-2 cursor-pointer transition-all duration-200 ${
+                        paymentMethod === "cod"
+                          ? "border-primary bg-primary/5"
+                          : "border-border bg-card hover:border-primary/40"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        id="payment-cod"
+                        name="payment"
+                        value="cod"
+                        checked={paymentMethod === "cod"}
+                        onChange={() => setPaymentMethod("cod")}
+                        className="mt-1 accent-primary"
+                        data-ocid="checkout.radio"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Banknote className="h-4 w-4 text-primary" />
+                          <span className="font-sans font-semibold text-sm">
+                            Cash on Delivery (COD)
+                          </span>
+                          <span className="ml-auto text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">
+                            Popular
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1 font-sans">
+                          Pay when your order arrives at your door. No advance
+                          payment needed.
+                        </p>
+                      </div>
+                    </label>
+
+                    {/* EasyPaisa Option */}
+                    <label
+                      htmlFor="payment-easypaisa"
+                      className={`flex items-start gap-4 p-4 rounded-sm border-2 cursor-pointer transition-all duration-200 ${
+                        paymentMethod === "easypaisa"
+                          ? "border-primary bg-primary/5"
+                          : "border-border bg-card hover:border-primary/40"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        id="payment-easypaisa"
+                        name="payment"
+                        value="easypaisa"
+                        checked={paymentMethod === "easypaisa"}
+                        onChange={() => setPaymentMethod("easypaisa")}
+                        className="mt-1 accent-primary"
+                        data-ocid="checkout.radio"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Smartphone className="h-4 w-4 text-green-600" />
+                          <span className="font-sans font-semibold text-sm">
+                            EasyPaisa
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1 font-sans">
+                          Send payment to EasyPaisa account:{" "}
+                          <strong className="text-foreground">
+                            03041329809
+                          </strong>
+                          , then place your order. Share screenshot on WhatsApp
+                          for confirmation.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
                 <Button
                   type="submit"
                   data-ocid="checkout.submit_button"
                   className="w-full bg-primary text-primary-foreground hover:opacity-90 rounded-sm py-4 font-semibold uppercase tracking-widest text-sm gap-2"
                 >
                   <Package className="h-4 w-4" />
-                  Place Order · ${total.toFixed(2)}
+                  Place Order · Rs. {total.toFixed(0)}
                 </Button>
               </form>
 
@@ -295,24 +394,24 @@ export default function CheckoutPage() {
                         {item.product.name} ×{item.qty}
                       </span>
                       <span className="font-medium">
-                        ${(item.product.price * item.qty).toFixed(2)}
+                        Rs. {(item.product.price * item.qty).toFixed(0)}
                       </span>
                     </div>
                   ))}
                   <Separator className="my-4" />
                   <div className="flex justify-between text-sm font-sans mb-2">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span>${cartTotal.toFixed(2)}</span>
+                    <span>Rs. {cartTotal.toFixed(0)}</span>
                   </div>
                   <div className="flex justify-between text-sm font-sans text-muted-foreground mb-2">
                     <span>Shipping</span>
                     <span>
-                      {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
+                      {shipping === 0 ? "Free" : `Rs. ${shipping.toFixed(0)}`}
                     </span>
                   </div>
                   <div className="flex justify-between font-sans font-bold text-base border-t border-border pt-3 mt-2">
                     <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>Rs. {total.toFixed(0)}</span>
                   </div>
                 </div>
               </div>

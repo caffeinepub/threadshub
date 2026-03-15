@@ -6,6 +6,8 @@ import CartPage from "@/pages/CartPage";
 import CheckoutPage from "@/pages/CheckoutPage";
 import HomePage from "@/pages/HomePage";
 import ProductDetailPage from "@/pages/ProductDetailPage";
+import RefundPolicyPage from "@/pages/RefundPolicyPage";
+import ServicePolicyPage from "@/pages/ServicePolicyPage";
 import ShopPage from "@/pages/ShopPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -39,7 +41,7 @@ function WhatsAppButton() {
         )}
       </AnimatePresence>
       <motion.a
-        href="https://wa.me/923041329809"
+        href="https://wa.me/923174933882"
         target="_blank"
         rel="noopener noreferrer"
         data-ocid="whatsapp.button"
@@ -51,7 +53,6 @@ function WhatsAppButton() {
         className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg cursor-pointer"
         style={{ backgroundColor: "#25D366" }}
       >
-        {/* WhatsApp SVG icon */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
@@ -115,12 +116,26 @@ const checkoutRoute = createRoute({
   component: CheckoutPage,
 });
 
+const servicePolicyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/service-policy",
+  component: ServicePolicyPage,
+});
+
+const refundPolicyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/refund-policy",
+  component: RefundPolicyPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   shopRoute,
   productRoute,
   cartRoute,
   checkoutRoute,
+  servicePolicyRoute,
+  refundPolicyRoute,
 ]);
 
 const router = createRouter({ routeTree });

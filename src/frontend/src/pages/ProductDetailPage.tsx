@@ -2,8 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { products } from "@/data/products";
-import { Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, CheckCircle, ShoppingBag } from "lucide-react";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { ArrowLeft, CheckCircle, ShoppingBag, Zap } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ export default function ProductDetailPage() {
   const { id } = useParams({ strict: false }) as { id: string };
   const product = products.find((p) => p.id === id);
   const { addToCart } = useCart();
+  const navigate = useNavigate();
 
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [qty, setQty] = useState(1);
@@ -39,6 +40,15 @@ export default function ProductDetailPage() {
       description: `Size: ${selectedSize} · Qty: ${qty}`,
     });
     setTimeout(() => setAdded(false), 2000);
+  };
+
+  const handleBuyNow = () => {
+    if (!selectedSize) {
+      toast.error("Please select a size first");
+      return;
+    }
+    addToCart(product, selectedSize, qty);
+    navigate({ to: "/checkout" });
   };
 
   return (
@@ -83,7 +93,7 @@ export default function ProductDetailPage() {
             {product.name}
           </h1>
           <p className="mt-2 font-sans font-bold text-3xl text-primary">
-            ${product.price.toFixed(2)}
+            Rs. {product.price.toFixed(0)}
           </p>
           <p className="mt-4 font-sans text-muted-foreground leading-relaxed">
             {product.description}
@@ -144,25 +154,50 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          <Button
-            onClick={handleAddToCart}
-            data-ocid="product.add_button"
-            className={`mt-8 w-full sm:w-auto py-4 px-10 rounded-sm font-semibold uppercase tracking-widest text-sm gap-2 transition-all ${
-              added
-                ? "bg-green-600 text-white hover:bg-green-600"
-                : "bg-primary text-primary-foreground hover:opacity-90"
-            }`}
-          >
-            {added ? (
-              <>
-                <CheckCircle className="h-4 w-4" /> Added!
-              </>
-            ) : (
-              <>
-                <ShoppingBag className="h-4 w-4" /> Add to Cart
-              </>
-            )}
-          </Button>
+          <div className="mt-8 flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={handleBuyNow}
+              data-ocid="product.buy_now_button"
+              className="flex-1 py-4 px-8 rounded-sm font-semibold uppercase tracking-widest text-sm gap-2 bg-primary text-primary-foreground hover:opacity-90"
+            >
+              <Zap className="h-4 w-4" /> Buy Now
+            </Button>
+            <Button
+              onClick={handleAddToCart}
+              data-ocid="product.add_button"
+              variant="outline"
+              className={`flex-1 py-4 px-8 rounded-sm font-semibold uppercase tracking-widest text-sm gap-2 transition-all ${
+                added ? "border-green-600 text-green-600 hover:bg-green-50" : ""
+              }`}
+            >
+              {added ? (
+                <>
+                  <CheckCircle className="h-4 w-4" /> Added!
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="h-4 w-4" /> Add to Cart
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Payment info */}
+          <div className="mt-6 bg-secondary/40 rounded-sm p-4">
+            <p className="font-sans text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+              Payment Options
+            </p>
+            <div className="flex flex-wrap gap-3 text-xs font-sans text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <span className="text-green-600 font-bold">✓</span> Cash on
+                Delivery (COD)
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="text-green-600 font-bold">✓</span> EasyPaisa —
+                03041329809
+              </span>
+            </div>
+          </div>
         </motion.div>
       </div>
     </main>

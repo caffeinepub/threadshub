@@ -8,20 +8,27 @@ export default function AnnouncementBar() {
 
   return (
     <div
-      className="bg-foreground text-background text-sm font-sans font-medium py-2.5 px-4 flex items-center justify-center gap-2 relative"
+      className="bg-foreground text-background py-2.5 px-4 flex items-center justify-center relative overflow-hidden"
       data-ocid="announcement.section"
     >
-      <span className="text-center">
-        🎉 <strong>FREE DELIVERY</strong> on orders above Rs. 2,000
-        &nbsp;|&nbsp; Use code <strong className="text-primary">FIRST10</strong>{" "}
-        for <strong>10% OFF</strong>
-      </span>
+      <p className="text-center font-bold text-xs sm:text-sm pr-8 line-clamp-2 sm:line-clamp-1">
+        {/* Shorter text on mobile, full text on sm+ */}
+        <span className="sm:hidden">
+          🔥 Free Delivery + 10% OFF — Code:{" "}
+          <span className="text-primary font-extrabold">FIRST10</span>
+        </span>
+        <span className="hidden sm:inline">
+          🔥 Free Delivery + 10% OFF (Use Code:{" "}
+          <span className="text-primary font-extrabold">FIRST10</span>) —{" "}
+          <span className="font-extrabold">Limited Time Offer</span>
+        </span>
+      </p>
       <button
         type="button"
         onClick={() => setVisible(false)}
         aria-label="Dismiss announcement"
         data-ocid="announcement.close_button"
-        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:opacity-70 transition-opacity"
+        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:opacity-70 transition-opacity flex-shrink-0"
       >
         <X className="h-3.5 w-3.5" />
       </button>

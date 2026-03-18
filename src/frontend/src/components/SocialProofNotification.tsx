@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 const NOTIFICATIONS = [
   "Ali from Lahore just bought Classic Oxford Shirt",
   "Fatima from Karachi just ordered Floral Blouse",
-  "12 people are viewing this product right now",
   "Bilal from Islamabad just bought Slim Fit Denim",
   "Sara from Faisalabad just ordered Boys Polo Shirt",
   "Ahmed from Peshawar just bought Baby Onesie Set",

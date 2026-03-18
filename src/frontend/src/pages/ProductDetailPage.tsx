@@ -25,7 +25,7 @@ import {
   Zap,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const colorMap: Record<string, string> = {
@@ -104,7 +104,24 @@ export default function ProductDetailPage() {
   const [added, setAdded] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
 
-  const viewingCount = useMemo(() => 8 + ((id?.charCodeAt(0) ?? 0) % 17), [id]);
+  const [viewingCount, setViewingCount] = useState(
+    2 + ((id?.charCodeAt(0) ?? 0) % 4),
+  );
+
+  useEffect(() => {
+    const schedule = () => {
+      const delay = 15000 + Math.random() * 15000;
+      return setTimeout(() => {
+        setViewingCount((prev) => {
+          const delta = Math.random() > 0.5 ? 1 : -1;
+          return Math.min(8, Math.max(2, prev + delta));
+        });
+        timerRef.current = schedule();
+      }, delay);
+    };
+    const timerRef = { current: schedule() };
+    return () => clearTimeout(timerRef.current);
+  }, []);
 
   if (!product) {
     return (

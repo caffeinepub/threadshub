@@ -2052,6 +2052,58 @@ function SettingsSection() {
               />
             </div>
           ))}
+          {/* ─── Hero Cover Photo ─── */}
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">Hero Cover Photo</Label>
+            <p className="text-xs text-muted-foreground">
+              Upload a custom banner image for the homepage hero section.
+            </p>
+            <div className="overflow-hidden rounded-md border border-slate-200">
+              <img
+                src={
+                  form.heroImage ||
+                  "/assets/generated/hero-streetwear.dim_1400x600.jpg"
+                }
+                alt="Hero preview"
+                className="w-full h-32 object-cover"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <label
+                htmlFor="hero-upload"
+                className="cursor-pointer inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
+                data-ocid="settings.upload_button"
+              >
+                Upload New Photo
+                <input
+                  id="hero-upload"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      const result = ev.target?.result as string;
+                      setForm((p) => ({ ...p, heroImage: result }));
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                />
+              </label>
+              {form.heroImage && (
+                <button
+                  type="button"
+                  onClick={() => setForm((p) => ({ ...p, heroImage: "" }))}
+                  className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                  data-ocid="settings.delete_button"
+                >
+                  Remove Custom Photo
+                </button>
+              )}
+            </div>
+          </div>
           <Button
             type="submit"
             className="bg-slate-900 hover:bg-slate-800 text-white"

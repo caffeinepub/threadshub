@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import type { Category } from "@/data/products";
 import { categories } from "@/data/products";
 import { getProducts } from "@/utils/productStorage";
+import { getSettings } from "@/utils/settingsStorage";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -106,6 +107,14 @@ const trustBadges = [
   { icon: ShieldCheck, label: "Secure Checkout", desc: "100% safe & trusted" },
 ];
 
+const categoryItems: { cat: Category; emoji: string; color: string }[] = [
+  { cat: "Men", emoji: "👔", color: "bg-slate-800" },
+  { cat: "Women", emoji: "👗", color: "bg-rose-700" },
+  { cat: "Boys", emoji: "👫", color: "bg-blue-700" },
+  { cat: "Girls", emoji: "👧", color: "bg-pink-600" },
+  { cat: "Baby", emoji: "👶", color: "bg-amber-600" },
+];
+
 export default function HomePage() {
   const products = getProducts();
   const featured = products.filter((p) => p.featured);
@@ -131,51 +140,54 @@ export default function HomePage() {
   };
 
   return (
-    <main>
+    <main className="w-full overflow-x-hidden">
       {/* ─── Hero ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-foreground">
         <img
-          src="/assets/generated/hero-banner.dim_1200x500.jpg"
-          alt="ThreadsHub fashion banner"
-          className="w-full h-[420px] sm:h-[520px] object-cover"
+          src={
+            getSettings().heroImage ||
+            "/assets/generated/hero-streetwear.dim_1400x600.jpg"
+          }
+          alt="ThreadsHub 2026 Streetwear Collection"
+          className="w-full h-[380px] sm:h-[520px] object-cover object-center"
           loading="eager"
           fetchPriority="high"
           decoding="async"
         />
         {/* Gradient overlay — dark on left fading to transparent on right */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/10" />
-        <div className="absolute inset-0 flex flex-col items-start justify-center px-8 sm:px-16 lg:px-24 z-10">
+        <div className="absolute inset-0 flex flex-col items-start justify-center px-4 sm:px-16 lg:px-24 z-10">
           <motion.div
             initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7 }}
           >
-            <p className="font-sans text-xs sm:text-sm font-semibold uppercase tracking-[0.25em] text-primary mb-3">
-              New Collection 2026
-            </p>
-            <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight max-w-xl">
-              Style for
+            <h1 className="font-display text-2xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight max-w-[260px] sm:max-w-xl">
+              🔥 New 2026
               <br />
-              <em className="not-italic text-primary">Every</em> Age
+              <em className="not-italic text-primary">Streetwear</em> Collection
             </h1>
-            <p className="mt-4 text-white/90 font-sans text-base max-w-sm">
-              Quality garments for men, women, boys, girls, and babies. Crafted
-              with care — worn with pride.
+            <p className="mt-3 text-white font-sans text-sm sm:text-lg font-semibold max-w-[220px] sm:max-w-sm drop-shadow">
+              Premium Quality Oversized Fits Under Rs. 1999
             </p>
-            <div className="mt-8 flex gap-4 flex-wrap">
-              <Link to="/shop">
+            <div className="mt-5 flex flex-col sm:flex-row gap-3 w-full max-w-[260px] sm:max-w-none">
+              <Link to="/shop" className="w-full sm:w-auto">
                 <Button
                   data-ocid="hero.primary_button"
-                  className="bg-primary text-primary-foreground hover:opacity-90 rounded-sm px-8 py-3 font-semibold uppercase tracking-widest text-sm gap-2"
+                  className="w-full sm:w-auto bg-primary text-primary-foreground hover:opacity-90 rounded-sm px-4 sm:px-6 py-3 font-bold uppercase tracking-wide text-xs sm:text-sm gap-2"
                 >
-                  Shop Now <ArrowRight className="h-4 w-4" />
+                  Shop Now → Upgrade Your Style 🔥
                 </Button>
               </Link>
-              <Link to="/shop" search={{ filter: "new" }}>
+              <Link
+                to="/shop"
+                search={{ filter: "new" }}
+                className="w-full sm:w-auto"
+              >
                 <button
                   type="button"
                   data-ocid="hero.new_arrivals_button"
-                  className="border-2 border-white text-white bg-transparent hover:bg-white/15 transition-colors rounded-sm px-8 py-3 font-semibold uppercase tracking-widest text-sm flex items-center gap-2"
+                  className="w-full sm:w-auto border-2 border-white text-white bg-transparent hover:bg-white/15 transition-colors rounded-sm px-4 sm:px-6 py-3 font-bold uppercase tracking-wide text-xs sm:text-sm flex items-center justify-center gap-2"
                 >
                   New Arrivals
                 </button>
@@ -191,28 +203,51 @@ export default function HomePage() {
         data-ocid="trust.section"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <motion.div
+            className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.1 } },
+            }}
+          >
             {trustBadges.map((badge) => (
-              <div key={badge.label} className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-sm bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <motion.div
+                key={badge.label}
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: {
+                    opacity: 1,
+                    y: 0,
+                    transition: { duration: 0.45, ease: "easeOut" },
+                  },
+                }}
+                whileHover={{ scale: 1.03 }}
+                className="flex items-center gap-2 sm:gap-3 min-w-0 cursor-default"
+              >
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-sm bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <badge.icon className="h-4 w-4 text-primary" />
                 </div>
-                <div>
-                  <p className="font-sans font-semibold text-xs text-foreground">
+                <div className="min-w-0">
+                  <p className="font-sans font-semibold text-xs text-foreground truncate">
                     {badge.label}
                   </p>
-                  <p className="text-xs text-muted-foreground">{badge.desc}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {badge.desc}
+                  </p>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* ─── Best Sellers ─────────────────────────────────────── */}
       {bestSellers.length > 0 && (
         <section
-          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14"
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14"
           data-ocid="bestsellers.section"
         >
           <div className="flex items-end justify-between mb-8">
@@ -243,7 +278,7 @@ export default function HomePage() {
 
       {/* ─── Categories ───────────────────────────────────────── */}
       <section
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 border-t border-border"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 border-t border-border"
         data-ocid="categories.section"
       >
         <div className="text-center mb-10">
@@ -254,22 +289,16 @@ export default function HomePage() {
             Shop by Category
           </h2>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          {(
-            [
-              { cat: "Men", emoji: "👔", color: "bg-slate-800" },
-              { cat: "Women", emoji: "👗", color: "bg-rose-700" },
-              { cat: "Boys", emoji: "👫", color: "bg-blue-700" },
-              { cat: "Girls", emoji: "👧", color: "bg-pink-600" },
-              { cat: "Baby", emoji: "👶", color: "bg-amber-600" },
-            ] as { cat: Category; emoji: string; color: string }[]
-          ).map(({ cat, emoji, color }, i) => (
+        {/* Mobile: 3-col grid so all 5 fit naturally (last row has 2 centered) */}
+        <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+          {categoryItems.map(({ cat, emoji, color }, i) => (
             <motion.div
               key={cat}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08 }}
+              className={i === 3 ? "col-start-1 sm:col-start-auto" : ""}
             >
               <Link
                 to="/shop"
@@ -278,11 +307,15 @@ export default function HomePage() {
                 className="block"
               >
                 <div
-                  className={`${color} text-white rounded-sm p-6 text-center hover:opacity-90 transition-opacity cursor-pointer`}
+                  className={`${color} text-white rounded-sm p-3 sm:p-6 text-center hover:opacity-90 transition-opacity cursor-pointer`}
                 >
-                  <div className="text-4xl mb-3">{emoji}</div>
-                  <p className="font-display font-bold text-lg">{cat}</p>
-                  <p className="font-sans text-xs opacity-80 mt-1 uppercase tracking-widest">
+                  <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">
+                    {emoji}
+                  </div>
+                  <p className="font-display font-bold text-sm sm:text-lg">
+                    {cat}
+                  </p>
+                  <p className="font-sans text-xs opacity-80 mt-0.5 sm:mt-1 uppercase tracking-widest hidden sm:block">
                     Shop Now
                   </p>
                 </div>
@@ -293,7 +326,10 @@ export default function HomePage() {
       </section>
 
       {/* ─── Featured Collection ───────────────────────────────── */}
-      <section className="bg-secondary/30 py-14" data-ocid="featured.section">
+      <section
+        className="bg-secondary/30 py-8 sm:py-14"
+        data-ocid="featured.section"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-8">
             <div>
@@ -354,7 +390,7 @@ export default function HomePage() {
 
       {/* ─── New Arrivals ─────────────────────────────────────── */}
       <section
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14"
         data-ocid="newarrivals.section"
       >
         <div className="flex items-end justify-between mb-8">
@@ -423,7 +459,7 @@ export default function HomePage() {
                 data-ocid="discount.shop_button"
                 className="bg-primary hover:opacity-90 text-primary-foreground rounded-sm px-10 py-3 font-bold uppercase tracking-widest text-sm gap-2"
               >
-                Shop Now <ArrowRight className="h-4 w-4" />
+                Shop Now → Upgrade Your Style 🔥
               </Button>
             </Link>
           </motion.div>
@@ -432,7 +468,7 @@ export default function HomePage() {
 
       {/* ─── Instagram Gallery ─────────────────────────────────── */}
       <section
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14"
         data-ocid="instagram.section"
       >
         <div className="text-center mb-8">
@@ -496,7 +532,7 @@ export default function HomePage() {
 
       {/* ─── Customer Reviews ─────────────────────────────────── */}
       <section
-        className="bg-secondary/30 py-14 px-4"
+        className="bg-secondary/30 py-8 sm:py-14 px-4"
         data-ocid="reviews.section"
       >
         <div className="max-w-7xl mx-auto">
@@ -555,7 +591,7 @@ export default function HomePage() {
 
       {/* ─── Influencer Section ───────────────────────────────── */}
       <section
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14"
         data-ocid="influencers.section"
       >
         <div className="text-center mb-10">

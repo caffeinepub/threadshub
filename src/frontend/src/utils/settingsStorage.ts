@@ -6,6 +6,7 @@ export interface StoreSettings {
   deliveryFee: number;
   freeShippingThreshold: number;
   currency: string;
+  heroImage?: string;
 }
 
 const STORAGE_KEY = "threadshub_settings";
@@ -18,6 +19,7 @@ const defaults: StoreSettings = {
   deliveryFee: 250,
   freeShippingThreshold: 5000,
   currency: "PKR",
+  heroImage: "",
 };
 
 export function getSettings(): StoreSettings {

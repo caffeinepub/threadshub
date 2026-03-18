@@ -41,14 +41,31 @@
     --sidebar-ring: 0.52 0.155 35;
   }
 
-  * {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
     @apply border-border;
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  html {
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   body {
     @apply bg-background text-foreground font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    max-width: 100%;
+    width: 100%;
   }
 
   h1,
@@ -69,7 +86,7 @@
   }
 
   .product-card-img {
-    @apply w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105;
+    @apply w-full h-48 sm:h-64 object-cover transition-transform duration-500 group-hover:scale-105;
   }
 
   .nav-link {

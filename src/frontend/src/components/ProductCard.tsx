@@ -36,8 +36,10 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   // Progress bar fill: stock out of 10 max, capped at 100%
   const stockBarPct = Math.min(Math.round((stock / 10) * 100), 100);
 
-  const renderStars = (rating: number) => {
-    const r = rating ?? 4.5;
+  const rating = product.rating ?? 4.5;
+  const isTrending = product.featured === true && rating >= 4.5;
+
+  const renderStars = (r: number) => {
     return (
       <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map((s) => (
@@ -87,6 +89,14 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
               ⭐ Best Seller
             </span>
           )}
+          {isTrending && (
+            <span
+              data-ocid="product.trending_toggle"
+              className="text-xs font-bold px-2 py-0.5 rounded-full bg-violet-600 text-white leading-tight shadow-sm"
+            >
+              🔥 Trending
+            </span>
+          )}
           {product.newArrival && (
             <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-600 text-white leading-tight shadow-sm">
               New
@@ -107,7 +117,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             {product.name}
           </h3>
         </Link>
-        <div className="mt-1 mb-2">{renderStars(product.rating ?? 4.5)}</div>
+        <div className="mt-1 mb-2">{renderStars(rating)}</div>
         <div className="flex items-center gap-2 mb-2">
           <span className="font-sans font-bold text-base text-foreground">
             Rs. {displayPrice.toLocaleString()}

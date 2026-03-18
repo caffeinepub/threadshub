@@ -36,9 +36,10 @@ export default function Navbar() {
     setMobileOpen(false);
   }, [location.pathname, location.search]);
 
-  const midpoint = Math.ceil(storeName.length / 2);
-  const nameFirst = storeName.slice(0, midpoint);
-  const nameLast = storeName.slice(midpoint);
+  // Split brand name: last 3 chars in primary color, rest in foreground
+  // "ThreadsHub" → "Threads" (foreground) + "Hub" (primary)
+  const nameFirst = storeName.slice(0, storeName.length - 3);
+  const nameLast = storeName.slice(-3);
 
   const handleNavClick = (link: (typeof NAV_LINKS)[0]) => {
     setMobileOpen(false);
@@ -55,7 +56,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-1 flex-shrink-0">
+        <Link to="/" className="flex items-center gap-0 flex-shrink-0">
           <span className="font-display text-2xl font-bold tracking-tight text-foreground">
             {nameFirst}
           </span>

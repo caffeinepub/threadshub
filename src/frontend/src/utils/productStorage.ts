@@ -4,7 +4,7 @@ import type { Category, Product, ProductType } from "@/data/products";
 export type { Category, Product, ProductType };
 
 const STORAGE_KEY = "threadshub_products";
-const SEEDED_KEY = "threadshub_products_seeded_v3";
+const SEEDED_KEY = "threadshub_products_seeded_v4";
 
 function seed(): void {
   if (localStorage.getItem(SEEDED_KEY)) return;
@@ -27,6 +27,10 @@ export function getProducts(): Product[] {
       stock: p.stock ?? 50,
       rating: p.rating ?? 4.5,
       reviewCount: p.reviewCount ?? 0,
+      deliveryThreshold: p.deliveryThreshold ?? "Above Rs. 2,000",
+      returnDays: p.returnDays ?? 7,
+      reviews: p.reviews ?? [],
+      colorImages: p.colorImages ?? {},
     }));
   } catch {
     return [...defaultProducts];

@@ -58,6 +58,7 @@ import {
   CreditCard,
   LayoutDashboard,
   LogOut,
+  Mail,
   Menu,
   MessageCircle,
   Package,
@@ -102,7 +103,8 @@ type Section =
   | "shipping"
   | "discounts"
   | "analytics"
-  | "settings";
+  | "settings"
+  | "subscribers";
 
 const NAV_ITEMS: { id: Section; label: string; icon: React.ReactNode }[] = [
   {
@@ -113,6 +115,11 @@ const NAV_ITEMS: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: "products", label: "Products", icon: <Package className="h-4 w-4" /> },
   { id: "orders", label: "Orders", icon: <ShoppingBag className="h-4 w-4" /> },
   { id: "customers", label: "Customers", icon: <Users className="h-4 w-4" /> },
+  {
+    id: "subscribers",
+    label: "Subscribers",
+    icon: <Mail className="h-4 w-4" />,
+  },
   {
     id: "payments",
     label: "Payments",
@@ -357,6 +364,9 @@ const EMPTY_PRODUCT: Omit<Product, "id"> = {
   category: "Men",
   type: "Shirt",
   image: "",
+  image2: "",
+  image3: "",
+  image4: "",
   featured: false,
   sizes: [],
   colors: [],
@@ -366,6 +376,11 @@ const EMPTY_PRODUCT: Omit<Product, "id"> = {
   fabric: "",
   rating: 4.5,
   reviewCount: 0,
+  shortDescription: "",
+  deliveryThreshold: "Above Rs. 2,000",
+  returnDays: 7,
+  reviews: [],
+  colorImages: {},
 };
 
 function ProductsSection() {
@@ -379,6 +394,13 @@ function ProductsSection() {
   const [colorsInput, setColorsInput] = useState("");
   const [imgPreview, setImgPreview] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const fileRef2 = useRef<HTMLInputElement>(null);
+  const fileRef3 = useRef<HTMLInputElement>(null);
+  const fileRef4 = useRef<HTMLInputElement>(null);
+  const [reviewsOpen, setReviewsOpen] = useState(false);
+  const [imgPreview2, setImgPreview2] = useState("");
+  const [imgPreview3, setImgPreview3] = useState("");
+  const [imgPreview4, setImgPreview4] = useState("");
 
   const reload = () => setProducts(getProducts());
 
@@ -394,6 +416,10 @@ function ProductsSection() {
     setSizesInput("");
     setColorsInput("");
     setImgPreview("");
+    setImgPreview2("");
+    setImgPreview3("");
+    setImgPreview4("");
+    setReviewsOpen(false);
     setDialogOpen(true);
   };
 
@@ -407,6 +433,9 @@ function ProductsSection() {
       category: p.category,
       type: p.type,
       image: p.image,
+      image2: p.image2 ?? "",
+      image3: p.image3 ?? "",
+      image4: p.image4 ?? "",
       featured: p.featured,
       sizes: p.sizes,
       colors: p.colors,
@@ -416,10 +445,19 @@ function ProductsSection() {
       fabric: p.fabric ?? "",
       rating: p.rating ?? 4.5,
       reviewCount: p.reviewCount ?? 0,
+      shortDescription: p.shortDescription ?? "",
+      deliveryThreshold: p.deliveryThreshold ?? "Above Rs. 2,000",
+      returnDays: p.returnDays ?? 7,
+      reviews: p.reviews ?? [],
+      colorImages: p.colorImages ?? {},
     });
     setSizesInput(p.sizes.join(","));
     setColorsInput(p.colors.join(","));
     setImgPreview(p.image);
+    setImgPreview2(p.image2 ?? "");
+    setImgPreview3(p.image3 ?? "");
+    setImgPreview4(p.image4 ?? "");
+    setReviewsOpen(false);
     setDialogOpen(true);
   };
 
@@ -435,6 +473,20 @@ function ProductsSection() {
     reader.readAsDataURL(file);
   };
 
+  const makeGalleryHandler =
+    (field: "image2" | "image3" | "image4", setPreview: (v: string) => void) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const url = ev.target?.result as string;
+        setPreview(url);
+        setForm((prev) => ({ ...prev, [field]: url }));
+      };
+      reader.readAsDataURL(file);
+    };
+
   const handleSave = () => {
     const payload: Product = {
       ...form,
@@ -449,6 +501,14 @@ function ProductsSection() {
         .filter(Boolean),
       discountPrice: form.discountPrice || undefined,
       fabric: form.fabric || undefined,
+      image2: form.image2 || undefined,
+      image3: form.image3 || undefined,
+      image4: form.image4 || undefined,
+      shortDescription: form.shortDescription || undefined,
+      deliveryThreshold: form.deliveryThreshold || "Above Rs. 2,000",
+      returnDays: form.returnDays ?? 7,
+      reviews: form.reviews ?? [],
+      colorImages: form.colorImages ?? {},
     };
     if (!payload.name.trim()) {
       toast.error("Product name is required");
@@ -666,6 +726,23 @@ function ProductsSection() {
                 data-ocid="products.textarea"
               />
             </div>
+            <div className="space-y-1">
+              <Label>Key Highlights (one per line)</Label>
+              <Textarea
+                value={form.shortDescription ?? ""}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, shortDescription: e.target.value }))
+                }
+                placeholder={
+                  "100% cotton fabric\nMachine washable\nAvailable in all sizes"
+                }
+                rows={3}
+                data-ocid="products.highlights.textarea"
+              />
+              <p className="text-xs text-muted-foreground">
+                Each line shown as a bullet point on product page
+              </p>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Price (PKR)</Label>
@@ -768,6 +845,54 @@ function ProductsSection() {
                 />
               </div>
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Review Count</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.reviewCount ?? 0}
+                  onChange={(e) =>
+                    setForm((p) => ({
+                      ...p,
+                      reviewCount: Number(e.target.value),
+                    }))
+                  }
+                  data-ocid="products.reviewcount.input"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Free Delivery Above</Label>
+                <Input
+                  value={form.deliveryThreshold ?? "Above Rs. 2,000"}
+                  onChange={(e) =>
+                    setForm((p) => ({
+                      ...p,
+                      deliveryThreshold: e.target.value,
+                    }))
+                  }
+                  placeholder="Above Rs. 2,000"
+                  data-ocid="products.delivery_threshold.input"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Return Policy (days)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.returnDays ?? 7}
+                  onChange={(e) =>
+                    setForm((p) => ({
+                      ...p,
+                      returnDays: Number(e.target.value),
+                    }))
+                  }
+                  data-ocid="products.return_days.input"
+                />
+              </div>
+            </div>
             <div className="space-y-1">
               <Label>Fabric / Material</Label>
               <Input
@@ -797,6 +922,136 @@ function ProductsSection() {
                 data-ocid="products.colors.input"
               />
             </div>
+            {/* Color Images Section */}
+            {colorsInput.trim() && (
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">
+                  Color Images (Optional)
+                </Label>
+                <p className="text-xs text-muted-foreground -mt-1">
+                  Assign a specific image to each color. When a customer clicks
+                  that color, this image will automatically appear.
+                </p>
+                {colorsInput
+                  .split(",")
+                  .map((c) => c.trim())
+                  .filter(Boolean)
+                  .map((color) => {
+                    const currentImg = form.colorImages?.[color] ?? "";
+                    return (
+                      <div
+                        key={color}
+                        className="border border-dashed border-slate-200 rounded-lg p-3 space-y-2"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-5 h-5 rounded-full border-2 border-slate-300 flex-shrink-0"
+                            style={{
+                              backgroundColor:
+                                (
+                                  {
+                                    White: "#FFFFFF",
+                                    Blue: "#3B82F6",
+                                    Grey: "#9CA3AF",
+                                    Black: "#1F2937",
+                                    Navy: "#1E3A5F",
+                                    Brown: "#92400E",
+                                    Pink: "#F9A8D4",
+                                    Yellow: "#FDE68A",
+                                    Beige: "#D2B48C",
+                                    Green: "#22C55E",
+                                    Red: "#EF4444",
+                                    Purple: "#A855F7",
+                                    "Pastel Pink": "#FBCFE8",
+                                    "Pastel Blue": "#BFDBFE",
+                                  } as Record<string, string>
+                                )[color] ?? "#ccc",
+                            }}
+                          />
+                          <Label className="text-xs font-medium">{color}</Label>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => {
+                              const input = document.createElement("input");
+                              input.type = "file";
+                              input.accept = "image/*";
+                              input.onchange = (e) => {
+                                const file = (e.target as HTMLInputElement)
+                                  .files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                  const url = ev.target?.result as string;
+                                  setForm((p) => ({
+                                    ...p,
+                                    colorImages: {
+                                      ...(p.colorImages ?? {}),
+                                      [color]: url,
+                                    },
+                                  }));
+                                };
+                                reader.readAsDataURL(file);
+                              };
+                              input.click();
+                            }}
+                          >
+                            Upload
+                          </Button>
+                          <Input
+                            className="flex-1 h-8 text-xs"
+                            value={
+                              currentImg.startsWith("data:") ? "" : currentImg
+                            }
+                            onChange={(e) =>
+                              setForm((p) => ({
+                                ...p,
+                                colorImages: {
+                                  ...(p.colorImages ?? {}),
+                                  [color]: e.target.value,
+                                },
+                              }))
+                            }
+                            placeholder="Enter image URL or upload"
+                          />
+                          {currentImg && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-xs text-red-500"
+                              onClick={() =>
+                                setForm((p) => {
+                                  const updated = { ...(p.colorImages ?? {}) };
+                                  delete updated[color];
+                                  return { ...p, colorImages: updated };
+                                })
+                              }
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                        {currentImg && (
+                          <img
+                            src={currentImg}
+                            alt={`${color} preview`}
+                            className="w-16 h-16 object-cover rounded border border-slate-200"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display =
+                                "none";
+                            }}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Product Image</Label>
               <div className="flex items-center gap-3">
@@ -839,6 +1094,93 @@ function ProductsSection() {
                   }}
                 />
               )}
+            </div>
+
+            {/* Gallery Images 2-4 */}
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">
+                Product Gallery (Images 2–4)
+              </Label>
+              <p className="text-xs text-muted-foreground -mt-1">
+                Additional product angles shown in the image gallery
+              </p>
+              {(["image2", "image3", "image4"] as const).map((field, idx) => {
+                const previews = [imgPreview2, imgPreview3, imgPreview4];
+                const refs = [fileRef2, fileRef3, fileRef4];
+                const setters = [
+                  setImgPreview2,
+                  setImgPreview3,
+                  setImgPreview4,
+                ];
+                const preview = previews[idx];
+                const ref = refs[idx];
+                const label = `Image ${idx + 2}`;
+                return (
+                  <div
+                    key={field}
+                    className="space-y-1 border border-dashed border-slate-200 rounded-lg p-3"
+                  >
+                    <Label className="text-xs text-muted-foreground">
+                      {label}
+                    </Label>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => ref.current?.click()}
+                      >
+                        Upload
+                      </Button>
+                      <input
+                        ref={ref}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={makeGalleryHandler(field, setters[idx])}
+                      />
+                      <Input
+                        className="flex-1 h-8 text-xs"
+                        value={
+                          (form[field] ?? "").startsWith("data:")
+                            ? ""
+                            : (form[field] ?? "")
+                        }
+                        onChange={(e) => {
+                          setForm((p) => ({ ...p, [field]: e.target.value }));
+                          setters[idx](e.target.value);
+                        }}
+                        placeholder="/assets/generated/image.jpg or URL"
+                      />
+                      {(form[field] ?? "") && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 text-xs text-red-500"
+                          onClick={() => {
+                            setForm((p) => ({ ...p, [field]: "" }));
+                            setters[idx]("");
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                    {preview && (
+                      <img
+                        src={preview}
+                        alt={`Gallery ${idx + 2}`}
+                        className="mt-1 w-16 h-16 object-cover rounded border border-slate-200"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
             <div className="space-y-3">
               <Label className="text-sm font-semibold">Product Flags</Label>
@@ -883,6 +1225,158 @@ function ProductsSection() {
                   </Label>
                 </div>
               </div>
+            </div>
+
+            {/* Customer Reviews Manager */}
+            <div className="space-y-2 border border-border rounded-lg overflow-hidden">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between px-4 py-3 bg-secondary/40 hover:bg-secondary/70 transition-colors text-sm font-semibold"
+                onClick={() => setReviewsOpen((v) => !v)}
+                data-ocid="products.reviews_toggle.button"
+              >
+                <span>
+                  Customer Reviews ({(form.reviews ?? []).length} reviews)
+                </span>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${reviewsOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {reviewsOpen && (
+                <div className="p-3 space-y-3">
+                  {(form.reviews ?? []).map((rev, i) => (
+                    <div
+                      key={`review-${i}-${rev.name}`}
+                      className="border border-dashed border-slate-200 rounded-lg p-3 space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-muted-foreground">
+                          Review #{i + 1}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-red-500"
+                          onClick={() =>
+                            setForm((p) => ({
+                              ...p,
+                              reviews: (p.reviews ?? []).filter(
+                                (_, ri) => ri !== i,
+                              ),
+                            }))
+                          }
+                          data-ocid={`products.review.delete_button.${i + 1}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Reviewer Name</Label>
+                          <Input
+                            className="h-8 text-xs"
+                            value={rev.name}
+                            onChange={(e) =>
+                              setForm((p) => ({
+                                ...p,
+                                reviews: (p.reviews ?? []).map((r, ri) =>
+                                  ri === i ? { ...r, name: e.target.value } : r,
+                                ),
+                              }))
+                            }
+                            placeholder="e.g. Amna S."
+                            data-ocid={`products.review.name.input.${i + 1}`}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Rating</Label>
+                          <Select
+                            value={String(rev.rating)}
+                            onValueChange={(v) =>
+                              setForm((p) => ({
+                                ...p,
+                                reviews: (p.reviews ?? []).map((r, ri) =>
+                                  ri === i ? { ...r, rating: Number(v) } : r,
+                                ),
+                              }))
+                            }
+                          >
+                            <SelectTrigger
+                              className="h-8 text-xs"
+                              data-ocid={`products.review.rating.select.${i + 1}`}
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[5, 4, 3, 2, 1].map((s) => (
+                                <SelectItem key={s} value={String(s)}>
+                                  {"★".repeat(s)} ({s})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Review Text</Label>
+                        <Textarea
+                          className="text-xs"
+                          rows={2}
+                          value={rev.text}
+                          onChange={(e) =>
+                            setForm((p) => ({
+                              ...p,
+                              reviews: (p.reviews ?? []).map((r, ri) =>
+                                ri === i ? { ...r, text: e.target.value } : r,
+                              ),
+                            }))
+                          }
+                          placeholder="Customer review text..."
+                          data-ocid={`products.review.textarea.${i + 1}`}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">
+                          Date (e.g. March 10, 2026)
+                        </Label>
+                        <Input
+                          className="h-8 text-xs"
+                          value={rev.date}
+                          onChange={(e) =>
+                            setForm((p) => ({
+                              ...p,
+                              reviews: (p.reviews ?? []).map((r, ri) =>
+                                ri === i ? { ...r, date: e.target.value } : r,
+                              ),
+                            }))
+                          }
+                          placeholder="March 10, 2026"
+                          data-ocid={`products.review.date.input.${i + 1}`}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs gap-1"
+                    onClick={() =>
+                      setForm((p) => ({
+                        ...p,
+                        reviews: [
+                          ...(p.reviews ?? []),
+                          { name: "", rating: 5, text: "", date: "" },
+                        ],
+                      }))
+                    }
+                    data-ocid="products.review.add_button"
+                  >
+                    <Plus className="h-3 w-3" /> Add Review
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -2118,6 +2612,171 @@ function SettingsSection() {
   );
 }
 
+// ─── Subscribers Section ──────────────────────────────────────────────────────
+function SubscribersSection() {
+  const [subscribers, setSubscribers] = useState<
+    { email: string; timestamp: string; source: string }[]
+  >([]);
+  const [contacts, setContacts] = useState<
+    {
+      name: string;
+      email: string;
+      phone: string;
+      message: string;
+      timestamp: string;
+    }[]
+  >([]);
+
+  useEffect(() => {
+    try {
+      setSubscribers(
+        JSON.parse(localStorage.getItem("th_subscribers") || "[]"),
+      );
+    } catch {}
+    try {
+      setContacts(
+        JSON.parse(localStorage.getItem("th_contact_submissions") || "[]"),
+      );
+    } catch {}
+  }, []);
+
+  const exportCSV = () => {
+    const rows = [
+      ["Email", "Date Subscribed", "Source"],
+      ...subscribers.map((s) => [
+        s.email,
+        new Date(s.timestamp).toLocaleDateString("en-PK"),
+        s.source,
+      ]),
+    ];
+    const csv = rows.map((r) => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "subscribers.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Email Subscribers */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <CardTitle className="text-base font-bold">
+                {subscribers.length} Email Subscribers
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Collected via navbar email capture popup
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={exportCSV}
+              disabled={subscribers.length === 0}
+            >
+              Export CSV
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {subscribers.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No subscribers yet. Email captures will appear here.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Date Subscribed</TableHead>
+                  <TableHead>Source</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {subscribers.map((s, i) => (
+                  <TableRow
+                    // biome-ignore lint/suspicious/noArrayIndexKey: no stable id
+                    key={i}
+                  >
+                    <TableCell className="font-medium text-sm">
+                      {s.email}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {new Date(s.timestamp).toLocaleDateString("en-PK", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                        {s.source}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Contact Form Submissions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-bold">
+            Contact Form Submissions
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Messages submitted via Contact Us form
+          </p>
+        </CardHeader>
+        <CardContent>
+          {contacts.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No contact submissions yet.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {contacts.map((c, i) => (
+                <div
+                  // biome-ignore lint/suspicious/noArrayIndexKey: no stable id
+                  key={i}
+                  className="border border-border rounded-xl p-4 space-y-1.5"
+                >
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="font-semibold text-sm text-foreground">
+                      {c.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(c.timestamp).toLocaleDateString("en-PK", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {c.email} {c.phone ? `| ${c.phone}` : ""}
+                  </p>
+                  <p className="text-sm text-foreground/80 bg-muted/50 rounded-lg p-2.5 mt-1">
+                    {c.message}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Main AdminPage ───────────────────────────────────────────────────────────
 export default function AdminPage() {
   const [authed, setAuthed] = useState(
@@ -2165,6 +2824,8 @@ export default function AdminPage() {
         return <AnalyticsSection />;
       case "settings":
         return <SettingsSection />;
+      case "subscribers":
+        return <SubscribersSection />;
       default:
         return null;
     }

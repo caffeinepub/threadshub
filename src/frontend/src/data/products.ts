@@ -1,6 +1,13 @@
 export type Category = "Men" | "Women" | "Boys" | "Girls" | "Baby";
 export type ProductType = "Shirt" | "Pants";
 
+export interface ProductReview {
+  name: string;
+  rating: number;
+  text: string;
+  date: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -10,6 +17,10 @@ export interface Product {
   category: Category;
   type: ProductType;
   image: string;
+  image2?: string;
+  image3?: string;
+  image4?: string;
+  colorImages?: Record<string, string>;
   featured: boolean;
   sizes: string[];
   colors: string[];
@@ -19,6 +30,10 @@ export interface Product {
   fabric?: string;
   rating: number;
   reviewCount: number;
+  shortDescription?: string;
+  deliveryThreshold?: string;
+  returnDays?: number;
+  reviews?: ProductReview[];
 }
 
 export const categories: Category[] = ["Men", "Women", "Boys", "Girls", "Baby"];
@@ -36,6 +51,10 @@ export const products: Product[] = [
     description:
       "Elegant white cotton kurta with fine gold thread work (krhai) embroidery on neckline and cuffs. Perfect for Eid, weddings, or casual wear.",
     fabric: "100% Premium Cotton",
+    shortDescription:
+      "Fine gold thread (krhai) embroidery\nPremium 100% cotton fabric\nAvailable in S–XXL\nMachine washable",
+    deliveryThreshold: "Above Rs. 2,000",
+    returnDays: 7,
     featured: true,
     newArrival: false,
     isBestSeller: true,
@@ -56,6 +75,8 @@ export const products: Product[] = [
     description:
       "Classic white shalwar with embroidered border detail. Comfortable cotton fabric for all-day wear. Matches perfectly with any kurta.",
     fabric: "100% Cotton",
+    deliveryThreshold: "Above Rs. 2,000",
+    returnDays: 7,
     featured: true,
     newArrival: false,
     isBestSeller: true,
@@ -76,6 +97,10 @@ export const products: Product[] = [
     description:
       "Beautiful ladies lawn suit with colorful thread work (krhai) embroidery and floral patterns. Soft fabric ideal for summer and festive occasions.",
     fabric: "Lawn / Chiffon Blend",
+    shortDescription:
+      "Vibrant floral embroidery\nSoft lawn fabric, ideal for summer\nFull 3-piece suit\nDry clean recommended",
+    deliveryThreshold: "Above Rs. 2,000",
+    returnDays: 7,
     featured: true,
     newArrival: true,
     isBestSeller: true,
@@ -95,6 +120,8 @@ export const products: Product[] = [
     description:
       "Elegant ladies trouser with delicate border embroidery. Soft fabric, comfortable fit for formal or casual wear.",
     fabric: "Cambric Cotton",
+    deliveryThreshold: "Above Rs. 2,000",
+    returnDays: 7,
     featured: false,
     newArrival: true,
     isBestSeller: false,
@@ -115,6 +142,8 @@ export const products: Product[] = [
     description:
       "Traditional boys kurta shalwar with simple embroidery on collar. Comfortable and stylish for Eid, school events, and family occasions.",
     fabric: "100% Pique Cotton",
+    deliveryThreshold: "Above Rs. 2,000",
+    returnDays: 7,
     featured: true,
     newArrival: false,
     isBestSeller: true,
@@ -134,6 +163,8 @@ export const products: Product[] = [
     description:
       "Comfortable boys shalwar in white cotton fabric. Easy to wash and durable for everyday wear.",
     fabric: "100% Cotton",
+    deliveryThreshold: "Above Rs. 2,000",
+    returnDays: 7,
     featured: false,
     newArrival: true,
     isBestSeller: false,
@@ -154,6 +185,8 @@ export const products: Product[] = [
     description:
       "Adorable girls frock with colorful floral thread work (krhai) embroidery around neckline and hem. Perfect for Eid, parties, and family events.",
     fabric: "Soft Cotton Blend",
+    deliveryThreshold: "Above Rs. 2,000",
+    returnDays: 7,
     featured: true,
     newArrival: true,
     isBestSeller: false,
@@ -173,6 +206,8 @@ export const products: Product[] = [
     description:
       "Soft pink shalwar for girls. Comfortable elastic waist, easy to wear for school, play, and everyday use.",
     fabric: "95% Cotton, 5% Spandex",
+    deliveryThreshold: "Above Rs. 2,000",
+    returnDays: 7,
     featured: false,
     newArrival: false,
     isBestSeller: false,
@@ -193,6 +228,8 @@ export const products: Product[] = [
     description:
       "Ultra-soft baby jora with light embroidery. Gentle on sensitive baby skin, comfortable for everyday wear and special occasions.",
     fabric: "100% Organic Cotton",
+    deliveryThreshold: "Above Rs. 2,000",
+    returnDays: 7,
     featured: true,
     newArrival: false,
     isBestSeller: true,
@@ -212,6 +249,8 @@ export const products: Product[] = [
     description:
       "Cozy soft shalwar for babies with elastic waist. Easy to put on and take off, gentle on skin.",
     fabric: "Fleece Cotton Blend",
+    deliveryThreshold: "Above Rs. 2,000",
+    returnDays: 7,
     featured: false,
     newArrival: true,
     isBestSeller: false,
@@ -232,6 +271,8 @@ export const products: Product[] = [
     description:
       "Premium lawn kurta with intricate thread work (krhai) embroidery on chest and sleeves. Breathable and comfortable for summer.",
     fabric: "100% Pure Lawn",
+    deliveryThreshold: "Above Rs. 2,000",
+    returnDays: 7,
     featured: true,
     newArrival: true,
     isBestSeller: false,
@@ -251,6 +292,8 @@ export const products: Product[] = [
     description:
       "Comfortable everyday casual shalwar for women. Relaxed fit with elastic waist, perfect for home, work, or casual outings.",
     fabric: "Cotton Poplin",
+    deliveryThreshold: "Above Rs. 2,000",
+    returnDays: 7,
     featured: false,
     newArrival: false,
     isBestSeller: false,

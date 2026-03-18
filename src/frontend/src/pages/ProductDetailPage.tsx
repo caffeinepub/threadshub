@@ -105,7 +105,7 @@ export default function ProductDetailPage() {
   const [activeImage, setActiveImage] = useState(0);
 
   const [viewingCount, setViewingCount] = useState(
-    2 + ((id?.charCodeAt(0) ?? 0) % 4),
+    3 + ((id?.charCodeAt(0) ?? 0) % 5),
   );
 
   useEffect(() => {
@@ -114,7 +114,7 @@ export default function ProductDetailPage() {
       return setTimeout(() => {
         setViewingCount((prev) => {
           const delta = Math.random() > 0.5 ? 1 : -1;
-          return Math.min(8, Math.max(2, prev + delta));
+          return Math.min(9, Math.max(3, prev + delta));
         });
         timerRef.current = schedule();
       }, delay);
@@ -151,7 +151,29 @@ export default function ProductDetailPage() {
   const isLowStock = stock <= 10 && stock > 0;
   const outOfStock = stock === 0;
 
-  const images = [product.image, product.image, product.image];
+  const images = [
+    product.image,
+    product.image2,
+    product.image3,
+    product.image4,
+  ].filter(Boolean) as string[];
+  const colorImagesMap = product.colorImages ?? {};
+  const extraColorImgs = Object.values(colorImagesMap).filter(
+    (img): img is string => Boolean(img) && !images.includes(img),
+  );
+  const allImages =
+    images.length > 0
+      ? [...images, ...extraColorImgs]
+      : [product.image, ...extraColorImgs];
+
+  const handleColorSelect = (c: string) => {
+    setSelectedColor(c);
+    const img = colorImagesMap[c];
+    if (img) {
+      const idx = allImages.indexOf(img);
+      if (idx !== -1) setActiveImage(idx);
+    }
+  };
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -207,7 +229,7 @@ export default function ProductDetailPage() {
         >
           <div className="relative overflow-hidden rounded-sm bg-secondary">
             <img
-              src={images[activeImage]}
+              src={allImages[activeImage]}
               alt={product.name}
               className="w-full h-[460px] object-cover"
             />
@@ -234,7 +256,7 @@ export default function ProductDetailPage() {
             )}
           </div>
           <div className="flex gap-2">
-            {images.map((img, i) => (
+            {allImages.map((img, i) => (
               <button
                 type="button"
                 // biome-ignore lint/suspicious/noArrayIndexKey: thumbnail images are stable positional
@@ -339,6 +361,24 @@ export default function ProductDetailPage() {
           <p className="font-sans text-muted-foreground leading-relaxed">
             {product.description}
           </p>
+
+          {/* Key highlights / short description */}
+          {product.shortDescription && (
+            <ul className="space-y-1.5">
+              {product.shortDescription
+                .split("\n")
+                .filter(Boolean)
+                .map((line) => (
+                  <li
+                    key={line}
+                    className="flex items-start gap-2 text-sm text-muted-foreground"
+                  >
+                    <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>{line}</span>
+                  </li>
+                ))}
+            </ul>
+          )}
 
           {/* Fabric info */}
           {product.fabric && (
@@ -460,7 +500,7 @@ export default function ProductDetailPage() {
                 <button
                   type="button"
                   key={c}
-                  onClick={() => setSelectedColor(c)}
+                  onClick={() => handleColorSelect(c)}
                   title={c}
                   className={`w-9 h-9 rounded-full border-2 transition-all ${
                     selectedColor === c
@@ -565,22 +605,27 @@ export default function ProductDetailPage() {
 
           {/* Delivery info */}
           <div className="grid grid-cols-3 gap-3 pt-2">
-            {[
-              { icon: Truck, label: "Free delivery", sub: "Above Rs. 2,000" },
-              { icon: RefreshCw, label: "Easy returns", sub: "7-day policy" },
-              { icon: CheckCircle, label: "Secure", sub: "100% trusted" },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="flex flex-col items-center text-center gap-1.5 p-3 bg-secondary/40 rounded-sm"
-              >
-                <item.icon className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs font-semibold">{item.label}</span>
-                <span className="text-xs text-muted-foreground">
-                  {item.sub}
-                </span>
-              </div>
-            ))}
+            <div className="flex flex-col items-center text-center gap-1.5 p-3 bg-secondary/40 rounded-sm">
+              <Truck className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-semibold">Free delivery</span>
+              <span className="text-xs text-muted-foreground">
+                {product.deliveryThreshold ?? "Above Rs. 2,000"}
+              </span>
+            </div>
+            <div className="flex flex-col items-center text-center gap-1.5 p-3 bg-secondary/40 rounded-sm">
+              <RefreshCw className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-semibold">Easy returns</span>
+              <span className="text-xs text-muted-foreground">
+                {product.returnDays ?? 7}-day policy
+              </span>
+            </div>
+            <div className="flex flex-col items-center text-center gap-1.5 p-3 bg-secondary/40 rounded-sm">
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-semibold">Secure</span>
+              <span className="text-xs text-muted-foreground">
+                100% trusted
+              </span>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -632,46 +677,74 @@ export default function ProductDetailPage() {
               {product.rating ?? 4.5} out of 5
             </span>
             <span className="text-muted-foreground text-sm">
-              ({product.reviewCount ?? mockReviews.length} reviews)
+              (
+              {product.reviewCount ??
+                (product.reviews && product.reviews.length > 0
+                  ? product.reviews.length
+                  : mockReviews.length)}{" "}
+              reviews)
             </span>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {mockReviews.map((r, i) => (
-            <div
-              key={r.name}
-              className="bg-card p-5 rounded-sm shadow-card"
-              data-ocid={`product.review.item.${i + 1}`}
-            >
-              <div className="flex gap-0.5 mb-3">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <Star
-                    key={s}
-                    className={`h-3.5 w-3.5 ${
-                      s <= r.rating
-                        ? "fill-amber-400 text-amber-400"
-                        : "fill-muted text-muted"
-                    }`}
-                  />
-                ))}
-              </div>
-              <p className="font-sans text-sm text-muted-foreground leading-relaxed mb-4">
-                "{r.text}"
-              </p>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
-                  {r.avatar}
-                </div>
-                <div>
-                  <p className="font-semibold text-xs">{r.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {r.city} • {r.date}
-                  </p>
-                </div>
-              </div>
+        {(() => {
+          const activeReviews =
+            product.reviews && product.reviews.length > 0
+              ? product.reviews
+              : mockReviews;
+          return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {activeReviews.map((r, i) => {
+                const initials = r.name
+                  .split(" ")
+                  .map((w) => w[0] ?? "")
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2);
+                const isMock = "avatar" in r;
+                return (
+                  <div
+                    // biome-ignore lint/suspicious/noArrayIndexKey: stable review index
+                    key={i}
+                    className="bg-card p-5 rounded-sm shadow-card"
+                    data-ocid={`product.review.item.${i + 1}`}
+                  >
+                    <div className="flex gap-0.5 mb-3">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          className={`h-3.5 w-3.5 ${
+                            s <= r.rating
+                              ? "fill-amber-400 text-amber-400"
+                              : "fill-muted text-muted"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <p className="font-sans text-sm text-muted-foreground leading-relaxed mb-4">
+                      &ldquo;{r.text}&rdquo;
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
+                        {isMock
+                          ? (r as (typeof mockReviews)[0]).avatar
+                          : initials}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-xs">{r.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {isMock
+                            ? `${(r as (typeof mockReviews)[0]).city} • `
+                            : ""}
+                          {r.date}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
+          );
+        })()}
       </section>
 
       {/* Related Products */}

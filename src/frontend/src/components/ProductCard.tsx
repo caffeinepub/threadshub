@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import type { Product } from "@/data/products";
 import { Link } from "@tanstack/react-router";
-import { ShoppingBag, ShoppingCart } from "lucide-react";
+import { ShoppingBag, ShoppingCart, Star } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
@@ -10,14 +10,6 @@ interface ProductCardProps {
   product: Product;
   index?: number;
 }
-
-const categoryColors: Record<string, string> = {
-  Men: "bg-foreground/10 text-foreground",
-  Women: "bg-primary/15 text-primary",
-  Boys: "bg-blue-100 text-blue-700",
-  Girls: "bg-pink-100 text-pink-700",
-  Baby: "bg-amber-100 text-amber-700",
-};
 
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const { addToCart } = useCart();
@@ -27,6 +19,42 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
     toast.success(`${product.name} added to cart!`, {
       description: `Size: ${product.sizes[0]}`,
     });
+  };
+
+  const hasDiscount =
+    product.discountPrice && product.discountPrice < product.price;
+  const displayPrice = hasDiscount ? product.discountPrice! : product.price;
+  const discountPct = hasDiscount
+    ? Math.round(
+        ((product.price - product.discountPrice!) / product.price) * 100,
+      )
+    : 0;
+
+  const stock = product.stock ?? 50;
+  const isLowStock = stock <= 5 && stock > 0;
+  const outOfStock = stock === 0;
+  // Progress bar fill: stock out of 10 max, capped at 100%
+  const stockBarPct = Math.min(Math.round((stock / 10) * 100), 100);
+
+  const renderStars = (rating: number) => {
+    const r = rating ?? 4.5;
+    return (
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map((s) => (
+          <Star
+            key={s}
+            className={`h-3 w-3 ${
+              s <= Math.round(r)
+                ? "fill-amber-400 text-amber-400"
+                : "fill-muted text-muted"
+            }`}
+          />
+        ))}
+        <span className="text-xs text-muted-foreground ml-1">
+          ({product.reviewCount ?? 0})
+        </span>
+      </div>
+    );
   };
 
   return (
@@ -46,52 +74,82 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           src={product.image}
           alt={product.name}
           className="product-card-img"
+          loading="lazy"
+          decoding="async"
         />
-        <div className="absolute top-3 left-3">
-          <span
-            className={`text-xs font-sans font-semibold px-2 py-1 rounded-full ${
-              categoryColors[product.category] ??
-              "bg-muted text-muted-foreground"
-            }`}
-          >
-            {product.category}
-          </span>
+        {/* Image badges — stacked top-left, no overlap */}
+        <div className="absolute top-2 left-2 flex flex-col gap-1">
+          {product.isBestSeller && (
+            <span
+              data-ocid="product.best_seller_toggle"
+              className="text-xs font-bold px-2 py-0.5 rounded-full bg-orange-500 text-white leading-tight shadow-sm"
+            >
+              ⭐ Best Seller
+            </span>
+          )}
+          {product.newArrival && (
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-600 text-white leading-tight shadow-sm">
+              New
+            </span>
+          )}
+          {hasDiscount && (
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-500 text-white leading-tight shadow-sm">
+              -{discountPct}%
+            </span>
+          )}
         </div>
       </Link>
-      <div className="p-4">
+
+      {/* Card body */}
+      <div className="p-3">
         <Link to="/product/$id" params={{ id: product.id }}>
           <h3 className="font-display text-base font-semibold text-card-foreground hover:text-primary transition-colors leading-tight">
             {product.name}
           </h3>
         </Link>
-        <p className="text-xs text-muted-foreground mt-0.5 mb-3">
-          {product.type}
-        </p>
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-sans font-bold text-lg text-foreground">
-            Rs. {product.price.toFixed(0)}
+        <div className="mt-1 mb-2">{renderStars(product.rating ?? 4.5)}</div>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="font-sans font-bold text-base text-foreground">
+            Rs. {displayPrice.toLocaleString()}
           </span>
-          <Button
-            size="sm"
-            onClick={handleQuickAdd}
-            data-ocid="product.add_button"
-            className="bg-primary text-primary-foreground hover:opacity-90 rounded-sm text-xs px-3 gap-1"
-          >
-            <ShoppingBag className="h-3.5 w-3.5" />
-            Add
-          </Button>
+          {hasDiscount && (
+            <span className="font-sans text-xs text-muted-foreground line-through">
+              Rs. {product.price.toLocaleString()}
+            </span>
+          )}
         </div>
-        {/* Shop Now Button */}
-        <Link
-          to="/product/$id"
-          params={{ id: product.id }}
-          className="block mt-3"
+
+        {/* Stock urgency — separate from image badges */}
+        {isLowStock && (
+          <div className="mb-3" data-ocid="product.stock_indicator">
+            <p className="text-xs font-semibold text-red-600 mb-1">
+              🔥 Only {stock} left!
+            </p>
+            <div className="h-1 w-full rounded-full bg-red-100 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-red-500 transition-all"
+                style={{ width: `${stockBarPct}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        <Button
+          size="sm"
+          onClick={handleQuickAdd}
+          disabled={outOfStock}
+          data-ocid="product.add_button"
+          className="w-full bg-primary text-primary-foreground hover:opacity-90 rounded-sm text-xs sm:text-sm gap-1 mb-2"
         >
+          <ShoppingBag className="h-3.5 w-3.5" />
+          {outOfStock ? "Out of Stock" : "Add to Cart"}
+        </Button>
+        <Link to="/product/$id" params={{ id: product.id }} className="block">
           <Button
             variant="outline"
             size="sm"
             data-ocid="product.shop_now_button"
-            className="w-full rounded-sm text-xs font-semibold uppercase tracking-widest gap-1.5 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+            className="w-full rounded-sm text-xs sm:text-sm font-semibold uppercase tracking-widest gap-1.5 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200"
           >
             <ShoppingCart className="h-3.5 w-3.5" />
             Shop Now

@@ -1,10 +1,17 @@
+import AnnouncementBar from "@/components/AnnouncementBar";
+import ExitIntentPopup from "@/components/ExitIntentPopup";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import SocialProofNotification from "@/components/SocialProofNotification";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/context/CartContext";
+import AboutPage from "@/pages/AboutPage";
+import AdminPage from "@/pages/AdminPage";
 import CartPage from "@/pages/CartPage";
 import CheckoutPage from "@/pages/CheckoutPage";
+import ContactPage from "@/pages/ContactPage";
 import HomePage from "@/pages/HomePage";
+import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import ProductDetailPage from "@/pages/ProductDetailPage";
 import RefundPolicyPage from "@/pages/RefundPolicyPage";
 import ServicePolicyPage from "@/pages/ServicePolicyPage";
@@ -69,73 +76,122 @@ function WhatsAppButton() {
   );
 }
 
+// Root: just renders Outlet + global Toaster
 const rootRoute = createRootRoute({
   component: () => (
+    <>
+      <Outlet />
+      <Toaster richColors position="bottom-right" />
+    </>
+  ),
+});
+
+// Store layout: AnnouncementBar + Navbar + content + Footer + WhatsApp + popups
+const storeLayoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: "_store",
+  component: () => (
     <div className="min-h-screen flex flex-col bg-background">
+      <AnnouncementBar />
       <Navbar />
       <div className="flex-1">
         <Outlet />
       </div>
       <Footer />
-      <Toaster richColors position="bottom-right" />
       <WhatsAppButton />
+      <SocialProofNotification />
+      <ExitIntentPopup />
     </div>
   ),
 });
 
 const indexRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => storeLayoutRoute,
   path: "/",
   component: HomePage,
 });
 
 const shopRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => storeLayoutRoute,
   path: "/shop",
-  validateSearch: (search: Record<string, unknown>): { category?: string } => ({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { category?: string; filter?: string } => ({
     category: typeof search.category === "string" ? search.category : undefined,
+    filter: typeof search.filter === "string" ? search.filter : undefined,
   }),
   component: ShopPage,
 });
 
 const productRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => storeLayoutRoute,
   path: "/product/$id",
   component: ProductDetailPage,
 });
 
 const cartRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => storeLayoutRoute,
   path: "/cart",
   component: CartPage,
 });
 
 const checkoutRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => storeLayoutRoute,
   path: "/checkout",
   component: CheckoutPage,
 });
 
+const contactRoute = createRoute({
+  getParentRoute: () => storeLayoutRoute,
+  path: "/contact",
+  component: ContactPage,
+});
+
 const servicePolicyRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => storeLayoutRoute,
   path: "/service-policy",
   component: ServicePolicyPage,
 });
 
 const refundPolicyRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => storeLayoutRoute,
   path: "/refund-policy",
   component: RefundPolicyPage,
 });
 
+const privacyPolicyRoute = createRoute({
+  getParentRoute: () => storeLayoutRoute,
+  path: "/privacy-policy",
+  component: PrivacyPolicyPage,
+});
+
+const aboutRoute = createRoute({
+  getParentRoute: () => storeLayoutRoute,
+  path: "/about",
+  component: AboutPage,
+});
+
+// Admin route: directly under root (no store Navbar/Footer)
+const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin",
+  component: AdminPage,
+});
+
 const routeTree = rootRoute.addChildren([
-  indexRoute,
-  shopRoute,
-  productRoute,
-  cartRoute,
-  checkoutRoute,
-  servicePolicyRoute,
-  refundPolicyRoute,
+  storeLayoutRoute.addChildren([
+    indexRoute,
+    shopRoute,
+    productRoute,
+    cartRoute,
+    checkoutRoute,
+    contactRoute,
+    servicePolicyRoute,
+    refundPolicyRoute,
+    privacyPolicyRoute,
+    aboutRoute,
+  ]),
+  adminRoute,
 ]);
 
 const router = createRouter({ routeTree });

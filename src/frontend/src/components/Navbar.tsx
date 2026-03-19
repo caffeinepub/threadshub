@@ -1,3 +1,4 @@
+import AnnouncementBar from "@/components/AnnouncementBar";
 import { useCart } from "@/context/CartContext";
 import { getSettings } from "@/utils/settingsStorage";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
@@ -210,11 +211,7 @@ function ContactUsModal({
       localStorage.setItem("th_contact_submissions", JSON.stringify(existing));
     } catch {}
     const waMsg = encodeURIComponent(
-      `Hi, I have a query:
-Name: ${form.name}
-Email: ${form.email}
-Phone: ${form.phone}
-Message: ${form.message}`,
+      `Hi, I have a query:\nName: ${form.name}\nEmail: ${form.email}\nPhone: ${form.phone}\nMessage: ${form.message}`,
     );
     window.open(`https://wa.me/923174933882?text=${waMsg}`, "_blank");
     setSubmitted(true);
@@ -379,63 +376,42 @@ A: Yes, COD is available across Pakistan.`,
     id: "shipping",
     label: "SHIPPING",
     icon: "📦",
-    content: `• Standard delivery: 3-5 business days
-• Free delivery on orders above Rs. 2,000
-• Delivery available across Pakistan
-• Orders are dispatched within 24 hours of confirmation
-• You will receive a WhatsApp confirmation once your order is dispatched`,
+    content:
+      "• Standard delivery: 3-5 business days\n• Free delivery on orders above Rs. 2,000\n• Delivery available across Pakistan\n• Orders are dispatched within 24 hours of confirmation\n• You will receive a WhatsApp confirmation once your order is dispatched",
   },
   {
     id: "returns",
     label: "RETURN AND EXCHANGE",
     icon: "🔄",
-    content: `• 7-day return/exchange policy from date of delivery
-• Item must be unused, unwashed, and in original packaging
-• To initiate a return, contact us on WhatsApp: 03174933882
-• Refunds processed within 3-5 business days after item received
-• Sale items are not eligible for return`,
+    content:
+      "• 7-day return/exchange policy from date of delivery\n• Item must be unused, unwashed, and in original packaging\n• To initiate a return, contact us on WhatsApp: 03174933882\n• Refunds processed within 3-5 business days after item received\n• Sale items are not eligible for return",
   },
   {
     id: "availability",
     label: "ITEM AVAILABILITY",
     icon: "🏷️",
-    content: `• Stock levels are updated in real-time
-• Items marked "Only X left" have limited stock
-• If an item goes out of stock after your order, we will contact you within 24 hours
-• Pre-orders are available for popular items — contact us on WhatsApp`,
+    content: `• Stock levels are updated in real-time\n• Items marked "Only X left" have limited stock\n• If an item goes out of stock after your order, we will contact you within 24 hours\n• Pre-orders are available for popular items — contact us on WhatsApp`,
   },
   {
     id: "giftcards",
     label: "GIFT CARDS",
     icon: "🎁",
-    content: `• ThreadsHub Gift Cards available in: Rs. 500, Rs. 1,000, Rs. 2,000, Rs. 5,000
-• Gift cards are delivered via WhatsApp within 1 hour
-• Valid for 1 year from date of purchase
-• Cannot be exchanged for cash
-• To purchase, contact us on WhatsApp: 03174933882`,
+    content:
+      "• ThreadsHub Gift Cards available in: Rs. 500, Rs. 1,000, Rs. 2,000, Rs. 5,000\n• Gift cards are delivered via WhatsApp within 1 hour\n• Valid for 1 year from date of purchase\n• Cannot be exchanged for cash\n• To purchase, contact us on WhatsApp: 03174933882",
   },
   {
     id: "terms",
     label: "TERMS & CONDITIONS",
     icon: "📋",
-    content: `• By placing an order, you agree to our terms
-• Prices are in PKR and may change without notice
-• ThreadsHub reserves the right to cancel any order
-• Fraudulent orders will be reported to authorities
-• Customer is responsible for providing correct delivery address
-• ThreadsHub is not liable for delays caused by courier partners`,
+    content:
+      "• By placing an order, you agree to our terms\n• Prices are in PKR and may change without notice\n• ThreadsHub reserves the right to cancel any order\n• Fraudulent orders will be reported to authorities\n• Customer is responsible for providing correct delivery address\n• ThreadsHub is not liable for delays caused by courier partners",
   },
   {
     id: "care",
     label: "CLOTHING CARE",
     icon: "👕",
-    content: `• Machine wash cold with similar colors
-• Do not bleach
-• Tumble dry low
-• Iron on low heat
-• Dry clean for embroidered/heavy work items
-• Store in a cool, dry place
-• Do not wring or twist delicate fabrics`,
+    content:
+      "• Machine wash cold with similar colors\n• Do not bleach\n• Tumble dry low\n• Iron on low heat\n• Dry clean for embroidered/heavy work items\n• Store in a cool, dry place\n• Do not wring or twist delicate fabrics",
   },
 ];
 
@@ -767,8 +743,6 @@ function TrackOrderModal({
                         </span>
                       </div>
                     </div>
-
-                    {/* Items */}
                     <div className="mb-4">
                       <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2">
                         Items
@@ -788,8 +762,6 @@ function TrackOrderModal({
                         </div>
                       ))}
                     </div>
-
-                    {/* Status timeline */}
                     <div className="space-y-2">
                       <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2">
                         Order Timeline
@@ -816,7 +788,6 @@ function TrackOrderModal({
                         </div>
                       ))}
                     </div>
-
                     <button
                       type="button"
                       onClick={() => setResult(null)}
@@ -843,9 +814,24 @@ export default function Navbar() {
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
   const [trackModalOpen, setTrackModalOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const [storeName, setStoreName] = useState(() => getSettings().storeName);
+
+  const isProductPage = location.pathname.startsWith("/product/");
+
+  // Scroll detection for transparent navbar on product pages
+  useEffect(() => {
+    if (!isProductPage) {
+      setScrolled(false);
+      return;
+    }
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isProductPage]);
 
   useEffect(() => {
     const handler = () => setStoreName(getSettings().storeName);
@@ -858,7 +844,6 @@ export default function Navbar() {
     setDrawerOpen(false);
   }, [location.pathname, location.search]);
 
-  // Lock body scroll when drawer is open
   useEffect(() => {
     if (drawerOpen) {
       document.body.style.overflow = "hidden";
@@ -885,16 +870,34 @@ export default function Navbar() {
     }
   };
 
+  // On product page, navbar floats over image (fixed + transparent → opaque on scroll)
+  // On other pages: sticky + always opaque
+  const isTransparent = isProductPage && !scrolled;
+
+  const headerClass = isProductPage
+    ? `fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isTransparent
+          ? "bg-transparent border-b border-transparent"
+          : "bg-background/95 backdrop-blur-sm border-b border-border shadow-sm"
+      }`
+    : "sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border";
+
+  const iconColor = isTransparent
+    ? "text-white hover:text-white/80"
+    : "hover:text-primary";
+  const logoColor = isTransparent ? "text-white" : "text-foreground";
+  const logoPrimaryColor = isTransparent ? "text-white/90" : "text-primary";
+
   return (
     <>
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+      <header className={headerClass}>
+        <AnnouncementBar />
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Left: Hamburger (mobile) + Logo */}
           <div className="flex items-center gap-3">
-            {/* Hamburger — mobile only, LEFT side */}
             <button
               type="button"
-              className="lg:hidden p-2 -ml-1"
+              className={`lg:hidden p-2 -ml-1 transition-colors ${iconColor}`}
               onClick={() => setDrawerOpen((v) => !v)}
               aria-label="Toggle menu"
               data-ocid="nav.menu.button"
@@ -903,10 +906,14 @@ export default function Navbar() {
             </button>
 
             <Link to="/" className="flex items-center gap-0 flex-shrink-0">
-              <span className="font-display text-2xl font-bold tracking-tight text-foreground">
+              <span
+                className={`font-display text-2xl font-bold tracking-tight transition-colors ${logoColor}`}
+              >
                 {nameFirst}
               </span>
-              <span className="font-display text-2xl font-bold tracking-tight text-primary">
+              <span
+                className={`font-display text-2xl font-bold tracking-tight transition-colors ${logoPrimaryColor}`}
+              >
                 {nameLast}
               </span>
             </Link>
@@ -932,8 +939,12 @@ export default function Navbar() {
                   data-ocid={`nav.${link.label.toLowerCase().replace(/\s+/g, "_")}.link`}
                   className={`text-sm font-sans font-semibold uppercase tracking-widest transition-colors whitespace-nowrap ${
                     isActive
-                      ? "text-foreground border-b-2 border-primary pb-0.5"
-                      : "text-foreground/60 hover:text-foreground"
+                      ? isTransparent
+                        ? "text-white border-b-2 border-white pb-0.5"
+                        : "text-foreground border-b-2 border-primary pb-0.5"
+                      : isTransparent
+                        ? "text-white/80 hover:text-white"
+                        : "text-foreground/60 hover:text-foreground"
                   }`}
                 >
                   {link.label}
@@ -944,37 +955,40 @@ export default function Navbar() {
 
           {/* Right: Search + Email + Cart */}
           <div className="flex items-center gap-1">
-            {/* Search */}
             <button
               type="button"
               onClick={() => navigate({ to: "/shop" })}
               aria-label="Search"
               data-ocid="nav.search.button"
-              className="p-2 hover:text-primary transition-colors"
+              className={`p-2 transition-colors ${iconColor}`}
             >
               <Search className="h-5 w-5" />
             </button>
 
-            {/* Email capture */}
             <button
               type="button"
               onClick={() => setEmailModalOpen(true)}
               aria-label="Subscribe for discount"
               data-ocid="nav.email.button"
-              className="p-2 hover:text-primary transition-colors"
+              className={`p-2 transition-colors ${iconColor}`}
             >
               <Mail className="h-5 w-5" />
             </button>
 
-            {/* Cart */}
             <Link
               to="/cart"
               data-ocid="nav.cart_button"
-              className="relative p-2 hover:text-primary transition-colors"
+              className={`relative p-2 transition-colors ${iconColor}`}
             >
               <ShoppingBag className="h-5 w-5" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                <span
+                  className={`absolute -top-1 -right-1 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center ${
+                    isTransparent
+                      ? "bg-white text-black"
+                      : "bg-primary text-primary-foreground"
+                  }`}
+                >
                   {cartCount > 9 ? "9+" : cartCount}
                 </span>
               )}
@@ -983,11 +997,14 @@ export default function Navbar() {
         </nav>
       </header>
 
+      {/* Spacer: only on non-product pages (where navbar is sticky it takes space naturally;
+          on product pages navbar is fixed so page content starts at top) */}
+      {!isProductPage && <div className="h-0" />}
+
       {/* ── Left Drawer (mobile) ────────────────────────────── */}
       <AnimatePresence>
         {drawerOpen && (
           <>
-            {/* Overlay */}
             <motion.div
               key="drawer-overlay"
               initial={{ opacity: 0 }}
@@ -998,7 +1015,6 @@ export default function Navbar() {
               onClick={() => setDrawerOpen(false)}
             />
 
-            {/* Drawer panel */}
             <motion.div
               key="drawer-panel"
               initial={{ x: "-100%" }}
@@ -1009,7 +1025,6 @@ export default function Navbar() {
               style={{ width: "min(80vw, 320px)" }}
               data-ocid="nav.drawer.panel"
             >
-              {/* Drawer header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <Link
                   to="/"
@@ -1033,7 +1048,6 @@ export default function Navbar() {
                 </button>
               </div>
 
-              {/* Nav links */}
               <div className="flex-1 overflow-y-auto">
                 <div className="px-4 py-3">
                   {NAV_LINKS.map((link) => (
@@ -1049,10 +1063,8 @@ export default function Navbar() {
                   ))}
                 </div>
 
-                {/* Separator */}
                 <div className="mx-4 my-1 border-t border-border" />
 
-                {/* Contact Us */}
                 <div className="px-4 py-2">
                   <button
                     type="button"
@@ -1067,7 +1079,6 @@ export default function Navbar() {
                     Contact Us
                   </button>
 
-                  {/* Help */}
                   <button
                     type="button"
                     onClick={() => {
@@ -1082,10 +1093,8 @@ export default function Navbar() {
                   </button>
                 </div>
 
-                {/* Separator */}
                 <div className="mx-4 my-1 border-t border-border" />
 
-                {/* Track Your Order */}
                 <div className="px-4 py-2">
                   <button
                     type="button"
@@ -1102,7 +1111,6 @@ export default function Navbar() {
                 </div>
               </div>
 
-              {/* Drawer footer */}
               <div className="px-4 py-4 border-t border-border">
                 <button
                   type="button"
@@ -1118,7 +1126,6 @@ export default function Navbar() {
         )}
       </AnimatePresence>
 
-      {/* Modals */}
       <EmailCaptureModal
         open={emailModalOpen}
         onClose={() => setEmailModalOpen(false)}

@@ -2530,6 +2530,16 @@ function SettingsSection() {
               type: "number",
             },
             { label: "Currency", key: "currency" as const, type: "text" },
+            {
+              label: "Announcement Bar Discount Code",
+              key: "announcementCode" as const,
+              type: "text",
+            },
+            {
+              label: "Popup Discount Code (Exit Intent)",
+              key: "popupCode" as const,
+              type: "text",
+            },
           ].map(({ label, key, type }) => (
             <div key={key} className="space-y-1">
               <Label>{label}</Label>

@@ -32,29 +32,28 @@ export default function ShopPage() {
   const [activeType, setActiveType] = useState<ProductType | "All">("All");
   const [searchText, setSearchText] = useState("");
   const [products, setProducts] = useState(() => getProducts());
+  const [discountBanner, setDiscountBanner] = useState(
+    () => sessionStorage.getItem("pendingDiscount") || "",
+  );
 
   // Update active category when URL changes
   useEffect(() => {
-    const cat = search.category;
-    if (cat && (categories as string[]).includes(cat)) {
-      setActiveCategory(cat as Category);
-    } else if (!cat) {
+    if (search.category && (categories as string[]).includes(search.category)) {
+      setActiveCategory(search.category as Category);
+    } else {
       setActiveCategory("All");
     }
   }, [search.category]);
 
-  // Listen for storage changes (cross-tab admin edits)
+  // Listen for product changes (admin edits)
   useEffect(() => {
     const handler = () => setProducts(getProducts());
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
   }, []);
 
-  // Listen for same-tab visibility changes
   useEffect(() => {
-    const handler = () => {
-      if (document.visibilityState === "visible") setProducts(getProducts());
-    };
+    const handler = () => setProducts(getProducts());
     document.addEventListener("visibilitychange", handler);
     return () => document.removeEventListener("visibilitychange", handler);
   }, []);
@@ -62,115 +61,133 @@ export default function ShopPage() {
   const filtered = products.filter((p) => {
     const matchCat = activeCategory === "All" || p.category === activeCategory;
     const matchType = activeType === "All" || p.type === activeType;
-    const matchSearch = p.name.toLowerCase().includes(searchText.toLowerCase());
-    // filter param overrides
+    const matchSearch =
+      !searchText ||
+      p.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      p.description.toLowerCase().includes(searchText.toLowerCase());
     if (search.filter === "new") return p.newArrival && matchSearch;
     if (search.filter === "bestseller") return p.isBestSeller && matchSearch;
     return matchCat && matchType && matchSearch;
   });
 
-  const pageHeading =
-    search.filter && PAGE_HEADINGS[search.filter]
-      ? PAGE_HEADINGS[search.filter]
-      : search.category && PAGE_HEADINGS[search.category]
-        ? PAGE_HEADINGS[search.category]
-        : "All Products";
+  const pageHeading = search.filter
+    ? PAGE_HEADINGS[search.filter] || "Collection"
+    : search.category && PAGE_HEADINGS[search.category]
+      ? PAGE_HEADINGS[search.category]
+      : "All Products";
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8">
-        <span className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-          {search.filter ? "Collections" : "Explore"}
-        </span>
-        <h1 className="font-display text-4xl font-bold mt-1">{pageHeading}</h1>
-        <p className="text-muted-foreground mt-2 font-sans text-sm">
-          {filtered.length} item{filtered.length !== 1 ? "s" : ""} found
-        </p>
-      </div>
-
-      {/* Filters — only show if not using filter param */}
-      {!search.filter && (
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search products..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="pl-10"
-              data-ocid="shop.search_input"
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {(["All", ...categories] as (Category | "All")[]).map((cat) => (
-              <button
-                type="button"
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                data-ocid="shop.category.tab"
-                className={`category-pill ${
-                  activeCategory === cat
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-background text-foreground border-border hover:border-primary"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex gap-2">
-            {(["All", ...productTypes] as (ProductType | "All")[]).map((t) => (
-              <button
-                type="button"
-                key={t}
-                onClick={() => setActiveType(t)}
-                data-ocid="shop.type.tab"
-                className={`category-pill ${
-                  activeType === t
-                    ? "bg-foreground text-background border-foreground"
-                    : "bg-background text-foreground border-border hover:border-foreground"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Search bar for filtered views */}
-      {search.filter && (
-        <div className="relative max-w-sm mb-8">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="pl-10"
-            data-ocid="shop.search_input"
-          />
-        </div>
-      )}
-
-      {filtered.length === 0 ? (
+    <div>
+      {discountBanner && (
         <div
-          className="text-center py-24 text-muted-foreground"
-          data-ocid="shop.empty_state"
+          className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 flex items-center justify-between rounded-md mx-4 sm:mx-6 lg:mx-8 mt-4"
+          data-ocid="shop.success_state"
         >
-          <p className="font-display text-2xl mb-2">No products found</p>
-          <p className="font-sans text-sm">
-            Try a different filter or search term.
+          <span className="font-semibold text-sm">
+            Your 10% discount is ready! Use code{" "}
+            <strong>{discountBanner}</strong> at checkout.
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setDiscountBanner("");
+              sessionStorage.removeItem("pendingDiscount");
+            }}
+            className="ml-4 text-green-600 hover:text-green-800 font-bold text-lg leading-none"
+          >
+            &times;
+          </button>
+        </div>
+      )}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-8">
+          <span className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+            {search.filter ? "Collections" : "Explore"}
+          </span>
+          <h1 className="font-display text-4xl font-bold mt-1">
+            {pageHeading}
+          </h1>
+          <p className="text-muted-foreground mt-2 font-sans text-sm">
+            {filtered.length} item{filtered.length !== 1 ? "s" : ""} found
           </p>
         </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
-          {filtered.map((p, i) => (
-            <ProductCard key={p.id} product={p} index={i} />
-          ))}
-        </div>
-      )}
-    </main>
+
+        {/* Filters — only show if not using filter param */}
+        {!search.filter && (
+          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search products..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="pl-9 font-sans"
+                data-ocid="shop.search_input"
+              />
+            </div>
+
+            {/* Category filter */}
+            <div className="flex gap-2 flex-wrap">
+              {(["All", ...categories] as (Category | "All")[]).map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setActiveCategory(cat)}
+                  data-ocid="shop.tab"
+                  className={`px-3 py-1.5 rounded-sm text-xs font-sans font-semibold uppercase tracking-wider transition-colors ${
+                    activeCategory === cat
+                      ? "bg-foreground text-background"
+                      : "bg-secondary text-foreground hover:bg-secondary/70"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Type filter */}
+        {!search.filter && activeCategory !== "All" && (
+          <div className="flex gap-2 flex-wrap mb-8">
+            {(["All", ...productTypes] as (ProductType | "All")[]).map(
+              (type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setActiveType(type)}
+                  data-ocid="shop.tab"
+                  className={`px-3 py-1.5 rounded-sm text-xs font-sans font-semibold uppercase tracking-wider transition-colors ${
+                    activeType === type
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-foreground hover:bg-secondary/70"
+                  }`}
+                >
+                  {type}
+                </button>
+              ),
+            )}
+          </div>
+        )}
+
+        {/* Products grid */}
+        {filtered.length === 0 ? (
+          <div className="text-center py-24" data-ocid="shop.empty_state">
+            <p className="font-display text-2xl mb-2">No products found</p>
+            <p className="text-muted-foreground font-sans text-sm">
+              Try adjusting your filters or search term.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {filtered.map((product, idx) => (
+              <div key={product.id} data-ocid={`shop.item.${idx + 1}`}>
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
   );
 }

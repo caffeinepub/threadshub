@@ -7,6 +7,8 @@ export interface StoreSettings {
   freeShippingThreshold: number;
   currency: string;
   heroImage?: string;
+  announcementCode: string;
+  popupCode: string;
 }
 
 const STORAGE_KEY = "threadshub_settings";
@@ -20,6 +22,8 @@ const defaults: StoreSettings = {
   freeShippingThreshold: 5000,
   currency: "PKR",
   heroImage: "",
+  announcementCode: "FIRST10",
+  popupCode: "SUMMER26",
 };
 
 export function getSettings(): StoreSettings {

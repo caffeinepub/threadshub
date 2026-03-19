@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { getSettings } from "@/utils/settingsStorage";
 import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
@@ -6,11 +7,21 @@ import { useEffect, useState } from "react";
 export default function ExitIntentPopup() {
   const [visible, setVisible] = useState(false);
   const navigate = useNavigate();
+  const settings = getSettings();
+  const popupCode = settings.popupCode || "SUMMER26";
 
   useEffect(() => {
     if (sessionStorage.getItem("exitPopupShown")) return;
 
     let lastScrollY = window.scrollY;
+
+    // 10-second timer trigger
+    const timer = setTimeout(() => {
+      if (!sessionStorage.getItem("exitPopupShown")) {
+        setVisible(true);
+        sessionStorage.setItem("exitPopupShown", "1");
+      }
+    }, 10000);
 
     // Desktop: mouse leaves viewport at top
     const handleMouseLeave = (e: MouseEvent) => {
@@ -36,12 +47,14 @@ export default function ExitIntentPopup() {
     document.addEventListener("mouseleave", handleMouseLeave);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
+      clearTimeout(timer);
       document.removeEventListener("mouseleave", handleMouseLeave);
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
   const handleShopNow = () => {
+    sessionStorage.setItem("pendingDiscount", popupCode);
     setVisible(false);
     navigate({ to: "/shop" });
   };
@@ -100,7 +113,7 @@ export default function ExitIntentPopup() {
                   Use code at checkout
                 </p>
                 <p className="font-display text-2xl font-bold tracking-widest text-primary">
-                  SUMMER26
+                  {popupCode}
                 </p>
               </div>
 

@@ -1,8 +1,26 @@
+import { getSettings } from "@/utils/settingsStorage";
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function AnnouncementBar() {
   const [visible, setVisible] = useState(true);
+  const [code, setCode] = useState(
+    () => getSettings().announcementCode || "FIRST10",
+  );
+
+  // Re-read code whenever admin saves settings
+  useEffect(() => {
+    const refresh = () => {
+      setCode(getSettings().announcementCode || "FIRST10");
+    };
+    window.addEventListener("storage", refresh);
+    // Also poll every 2s in case same-tab update (admin panel)
+    const interval = setInterval(refresh, 2000);
+    return () => {
+      window.removeEventListener("storage", refresh);
+      clearInterval(interval);
+    };
+  }, []);
 
   if (!visible) return null;
 
@@ -12,14 +30,13 @@ export default function AnnouncementBar() {
       data-ocid="announcement.section"
     >
       <p className="text-center font-bold text-xs sm:text-sm pr-8 line-clamp-2 sm:line-clamp-1">
-        {/* Shorter text on mobile, full text on sm+ */}
         <span className="sm:hidden">
           🔥 Free Delivery + 10% OFF — Code:{" "}
-          <span className="text-primary font-extrabold">FIRST10</span>
+          <span className="text-primary font-extrabold">{code}</span>
         </span>
         <span className="hidden sm:inline">
           🔥 Free Delivery + 10% OFF (Use Code:{" "}
-          <span className="text-primary font-extrabold">FIRST10</span>) —{" "}
+          <span className="text-primary font-extrabold">{code}</span>) —{" "}
           <span className="font-extrabold">Limited Time Offer</span>
         </span>
       </p>

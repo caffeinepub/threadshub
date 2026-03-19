@@ -1,4 +1,3 @@
-import AnnouncementBar from "@/components/AnnouncementBar";
 import ExitIntentPopup from "@/components/ExitIntentPopup";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
@@ -92,7 +91,6 @@ const storeLayoutRoute = createRoute({
   id: "_store",
   component: () => (
     <div className="min-h-screen flex flex-col bg-background overflow-x-hidden w-full">
-      <AnnouncementBar />
       <Navbar />
       <div className="flex-1">
         <Outlet />

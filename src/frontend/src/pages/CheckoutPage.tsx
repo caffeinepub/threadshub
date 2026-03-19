@@ -68,6 +68,22 @@ export default function CheckoutPage() {
   } | null>(null);
   const [discountError, setDiscountError] = useState("");
 
+  // Auto-apply discount from popup
+  useEffect(() => {
+    const pending = sessionStorage.getItem("pendingDiscount");
+    if (pending) {
+      const discounts = getDiscounts();
+      const found = discounts.find(
+        (d) => d.code === pending.toUpperCase() && d.active,
+      );
+      if (found) {
+        setDiscountCode(found.code);
+        setDiscountApplied({ code: found.code, percent: found.percent });
+        sessionStorage.removeItem("pendingDiscount");
+      }
+    }
+  }, []);
+
   const productTotal = cartTotal;
   const shippingFee = productTotal >= FREE_THRESHOLD ? 0 : COD_FEE;
   const discountAmount = discountApplied

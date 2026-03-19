@@ -491,37 +491,49 @@ export default function ProductDetailPage() {
   const ctaRef = useRef<HTMLDivElement>(null);
   const enterTimeRef = useRef<number>(Date.now());
 
-  // Viewing count — popular products start higher
+  // Viewing count — per-product, starts at 15-20 (regular) or 20-25 (bestseller)
   const baseCount = product?.isBestSeller
-    ? 20 + ((id?.charCodeAt(0) ?? 0) % 8)
-    : 8 + ((id?.charCodeAt(0) ?? 0) % 5);
+    ? 20 + ((id?.charCodeAt(0) ?? 0) % 6)
+    : 15 + ((id?.charCodeAt(0) ?? 0) % 6);
   const [viewingCount, setViewingCount] = useState(baseCount);
+  const peakRef = useRef(baseCount);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Real visitor time tracking — count goes up faster the longer someone stays
   useEffect(() => {
+    const newBase = product?.isBestSeller
+      ? 20 + ((id?.charCodeAt(0) ?? 0) % 6)
+      : 15 + ((id?.charCodeAt(0) ?? 0) % 6);
+    setViewingCount(newBase);
+    peakRef.current = newBase;
     enterTimeRef.current = Date.now();
+
     const schedule = () => {
-      // delay shorter the longer user has been on page (active viewer = more views)
-      const timeOnPage = (Date.now() - enterTimeRef.current) / 1000;
-      const delay =
-        timeOnPage > 60
-          ? 8000 + Math.random() * 7000
-          : timeOnPage > 30
-            ? 12000 + Math.random() * 8000
-            : 18000 + Math.random() * 12000;
+      const delay = 3000 + Math.random() * 5000; // 3–8 seconds
       return setTimeout(() => {
         setViewingCount((prev) => {
-          const min = product?.isBestSeller ? 18 : 6;
-          const max = product?.isBestSeller ? 35 : 14;
-          const delta = Math.random() > 0.4 ? 1 : -1;
-          return Math.min(max, Math.max(min, prev + delta));
+          const min = product?.isBestSeller ? 20 : 15;
+          const max = product?.isBestSeller ? 42 : 32;
+          // 70% chance UP, 30% chance DOWN (bias upward)
+          const goUp = Math.random() > 0.3;
+          let next: number;
+          if (goUp) {
+            next = prev + 1;
+          } else {
+            next = prev - 1; // always -1 when going down (gradual)
+          }
+          next = Math.min(max, Math.max(min, next));
+          if (next > peakRef.current) peakRef.current = next;
+          return next;
         });
         timerRef.current = schedule();
       }, delay);
     };
-    const timerRef = { current: schedule() };
-    return () => clearTimeout(timerRef.current);
-  }, [product?.isBestSeller]);
+
+    timerRef.current = schedule();
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [id, product?.isBestSeller]);
 
   // Sticky bar on scroll past CTA
   useEffect(() => {

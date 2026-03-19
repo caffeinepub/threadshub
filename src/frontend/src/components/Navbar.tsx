@@ -210,7 +210,11 @@ function ContactUsModal({
       localStorage.setItem("th_contact_submissions", JSON.stringify(existing));
     } catch {}
     const waMsg = encodeURIComponent(
-      `Hi, I have a query: Name: ${form.name}, Phone: ${form.phone}, Message: ${form.message}`,
+      `Hi, I have a query:
+Name: ${form.name}
+Email: ${form.email}
+Phone: ${form.phone}
+Message: ${form.message}`,
     );
     window.open(`https://wa.me/923174933882?text=${waMsg}`, "_blank");
     setSubmitted(true);
@@ -591,7 +595,7 @@ function TrackOrderModal({
     e.preventDefault();
     try {
       const orders: OrderRecord[] = JSON.parse(
-        localStorage.getItem("th_orders") || "[]",
+        localStorage.getItem("threadshub_orders") || "[]",
       );
       const found = orders.find(
         (o) =>

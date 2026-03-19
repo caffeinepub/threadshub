@@ -117,7 +117,7 @@ const NAV_ITEMS: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: "customers", label: "Customers", icon: <Users className="h-4 w-4" /> },
   {
     id: "subscribers",
-    label: "Subscribers",
+    label: "Contacts & Leads",
     icon: <Mail className="h-4 w-4" />,
   },
   {
@@ -1506,7 +1506,10 @@ function OrdersSection() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3 flex-wrap">
                     <div>
-                      <p className="font-semibold text-slate-800 text-sm">
+                      <p className="font-bold text-slate-900 text-sm">
+                        Order #{o.id}
+                      </p>
+                      <p className="font-semibold text-slate-700 text-sm">
                         {o.customerName}
                       </p>
                       <p className="text-xs text-slate-400">
@@ -2661,6 +2664,54 @@ function SubscribersSection() {
 
   return (
     <div className="space-y-6">
+      {/* Contact Form Messages */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-bold">
+            Contact Form Messages
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Customer inquiries submitted via the Contact Us form
+          </p>
+        </CardHeader>
+        <CardContent>
+          {contacts.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No contact submissions yet.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {contacts.map((c, i) => (
+                <div
+                  // biome-ignore lint/suspicious/noArrayIndexKey: no stable id
+                  key={i}
+                  className="border border-border rounded-xl p-4 space-y-1.5"
+                >
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="font-semibold text-sm text-foreground">
+                      {c.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(c.timestamp).toLocaleDateString("en-PK", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {c.email} {c.phone ? `| ${c.phone}` : ""}
+                  </p>
+                  <p className="text-sm text-foreground/80 bg-muted/50 rounded-lg p-2.5 mt-1">
+                    {c.message}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Email Subscribers */}
       <Card>
         <CardHeader>
@@ -2722,54 +2773,6 @@ function SubscribersSection() {
                 ))}
               </TableBody>
             </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Contact Form Submissions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-bold">
-            Contact Form Submissions
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Messages submitted via Contact Us form
-          </p>
-        </CardHeader>
-        <CardContent>
-          {contacts.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No contact submissions yet.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {contacts.map((c, i) => (
-                <div
-                  // biome-ignore lint/suspicious/noArrayIndexKey: no stable id
-                  key={i}
-                  className="border border-border rounded-xl p-4 space-y-1.5"
-                >
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <span className="font-semibold text-sm text-foreground">
-                      {c.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(c.timestamp).toLocaleDateString("en-PK", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {c.email} {c.phone ? `| ${c.phone}` : ""}
-                  </p>
-                  <p className="text-sm text-foreground/80 bg-muted/50 rounded-lg p-2.5 mt-1">
-                    {c.message}
-                  </p>
-                </div>
-              ))}
-            </div>
           )}
         </CardContent>
       </Card>

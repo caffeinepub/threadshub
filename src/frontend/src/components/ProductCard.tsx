@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import type { Product } from "@/data/products";
 import { Link } from "@tanstack/react-router";
-import { ShoppingBag, ShoppingCart, Star } from "lucide-react";
+import { ShoppingBag, Star } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
@@ -33,31 +33,28 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const stock = product.stock ?? 50;
   const isLowStock = stock <= 5 && stock > 0;
   const outOfStock = stock === 0;
-  // Progress bar fill: stock out of 10 max, capped at 100%
   const stockBarPct = Math.min(Math.round((stock / 10) * 100), 100);
 
   const rating = product.rating ?? 4.5;
   const isTrending = product.featured === true && rating >= 4.5;
 
-  const renderStars = (r: number) => {
-    return (
-      <div className="flex items-center gap-0.5">
-        {[1, 2, 3, 4, 5].map((s) => (
-          <Star
-            key={s}
-            className={`h-3 w-3 ${
-              s <= Math.round(r)
-                ? "fill-amber-400 text-amber-400"
-                : "fill-muted text-muted"
-            }`}
-          />
-        ))}
-        <span className="text-xs text-muted-foreground ml-1">
-          ({product.reviewCount ?? 0})
-        </span>
-      </div>
-    );
-  };
+  const renderStars = (r: number) => (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <Star
+          key={s}
+          className={`h-3 w-3 ${
+            s <= Math.round(r)
+              ? "fill-amber-400 text-amber-400"
+              : "fill-muted text-muted"
+          }`}
+        />
+      ))}
+      <span className="text-xs text-muted-foreground ml-1">
+        ({product.reviewCount ?? 0})
+      </span>
+    </div>
+  );
 
   return (
     <motion.div
@@ -79,21 +76,15 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           loading="lazy"
           decoding="async"
         />
-        {/* Image badges — stacked top-left, no overlap */}
+        {/* Image badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {product.isBestSeller && (
-            <span
-              data-ocid="product.best_seller_toggle"
-              className="text-xs font-bold px-2 py-0.5 rounded-full bg-orange-500 text-white leading-tight shadow-sm"
-            >
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-orange-500 text-white leading-tight shadow-sm">
               ⭐ Best Seller
             </span>
           )}
           {isTrending && (
-            <span
-              data-ocid="product.trending_toggle"
-              className="text-xs font-bold px-2 py-0.5 rounded-full bg-violet-600 text-white leading-tight shadow-sm"
-            >
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-violet-600 text-white leading-tight shadow-sm">
               🔥 Trending
             </span>
           )}
@@ -117,7 +108,13 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             {product.name}
           </h3>
         </Link>
-        <div className="mt-1 mb-2">{renderStars(rating)}</div>
+        <div className="mt-1 mb-1">{renderStars(rating)}</div>
+
+        {/* Social proof */}
+        <p className="text-xs font-semibold text-orange-600 mb-2">
+          🔥 {(product.soldCount ?? 500).toLocaleString()}+ sold
+        </p>
+
         <div className="flex items-center gap-2 mb-2">
           <span className="font-sans font-bold text-base text-foreground">
             Rs. {displayPrice.toLocaleString()}
@@ -129,9 +126,9 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           )}
         </div>
 
-        {/* Stock urgency — separate from image badges */}
+        {/* Stock urgency */}
         {isLowStock && (
-          <div className="mb-3" data-ocid="product.stock_indicator">
+          <div className="mb-3">
             <p className="text-xs font-semibold text-red-600 mb-1">
               🔥 Only {stock} left!
             </p>
@@ -144,27 +141,17 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           </div>
         )}
 
+        {/* Single CTA: Add to Cart */}
         <Button
           size="sm"
           onClick={handleQuickAdd}
           disabled={outOfStock}
           data-ocid="product.add_button"
-          className="w-full bg-primary text-primary-foreground hover:opacity-90 rounded-sm text-xs sm:text-sm gap-1 mb-2"
+          className="w-full bg-primary text-primary-foreground hover:opacity-90 rounded-sm text-xs sm:text-sm gap-1 font-bold"
         >
           <ShoppingBag className="h-3.5 w-3.5" />
           {outOfStock ? "Out of Stock" : "Add to Cart"}
         </Button>
-        <Link to="/product/$id" params={{ id: product.id }} className="block">
-          <Button
-            variant="outline"
-            size="sm"
-            data-ocid="product.shop_now_button"
-            className="w-full rounded-sm text-xs sm:text-sm font-semibold uppercase tracking-widest gap-1.5 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200"
-          >
-            <ShoppingCart className="h-3.5 w-3.5" />
-            Shop Now
-          </Button>
-        </Link>
       </div>
     </motion.div>
   );

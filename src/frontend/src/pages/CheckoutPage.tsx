@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
-import { getDiscounts } from "@/utils/discountStorage";
-import { saveOrder } from "@/utils/orderStorage";
-import { getSettings } from "@/utils/settingsStorage";
+import { useStore } from "@/context/StoreContext";
+import * as bs from "@/lib/backendService";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -35,8 +34,16 @@ interface SavedOrder {
   paymentMethod: PaymentMethod;
 }
 
+declare const window: Window & {
+  gtag?: (
+    command: string,
+    action: string,
+    params: Record<string, unknown>,
+  ) => void;
+};
+
 export default function CheckoutPage() {
-  const settings = getSettings();
+  const { settings, discounts } = useStore();
   const WHATSAPP_NUMBER = settings.whatsappNumber.replace(/^0/, "92");
   const EASYPAISA_NUMBER = settings.easyPaisaNumber;
   const COD_FEE = settings.deliveryFee ?? 250;
@@ -60,7 +67,6 @@ export default function CheckoutPage() {
     () => `TH-${Math.floor(100000 + Math.random() * 900000)}`,
   );
 
-  // Discount code state
   const [discountCode, setDiscountCode] = useState("");
   const [discountApplied, setDiscountApplied] = useState<{
     code: string;
@@ -72,7 +78,6 @@ export default function CheckoutPage() {
   useEffect(() => {
     const pending = sessionStorage.getItem("pendingDiscount");
     if (pending) {
-      const discounts = getDiscounts();
       const found = discounts.find(
         (d) => d.code === pending.toUpperCase() && d.active,
       );
@@ -82,7 +87,7 @@ export default function CheckoutPage() {
         sessionStorage.removeItem("pendingDiscount");
       }
     }
-  }, []);
+  }, [discounts]);
 
   const productTotal = cartTotal;
   const shippingFee = productTotal >= FREE_THRESHOLD ? 0 : COD_FEE;
@@ -107,28 +112,36 @@ export default function CheckoutPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleApplyDiscount = () => {
+  const handleApplyDiscount = async () => {
     setDiscountError("");
     const code = discountCode.trim().toUpperCase();
-    const discounts = getDiscounts();
-    const found = discounts.find((d) => d.code === code && d.active);
-    if (found) {
-      setDiscountApplied({ code: found.code, percent: found.percent });
+    // First check local discounts, then backend
+    const localFound = discounts.find((d) => d.code === code && d.active);
+    if (localFound) {
+      setDiscountApplied({
+        code: localFound.code,
+        percent: localFound.percent,
+      });
+      return;
+    }
+    const percent = await bs.checkDiscount(code);
+    if (percent !== null) {
+      setDiscountApplied({ code, percent });
     } else {
       setDiscountError("Invalid or inactive discount code.");
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
-    // Save order details BEFORE clearing cart
     const currentGrandTotal = grandTotal;
     const currentForm = { ...form };
     const currentPaymentMethod = paymentMethod;
 
-    saveOrder({
+    // Save order to backend
+    const orderPayload: bs.FrontendOrder = {
       id: orderNum,
       date: new Date().toISOString(),
       customerName: form.name,
@@ -137,9 +150,7 @@ export default function CheckoutPage() {
       address: form.address,
       city: form.city,
       postalCode: "",
-      deliveryPhone: form.phone,
       paymentMethod,
-      shippingMethod: paymentMethod,
       items: cartItems.map((i) => ({
         productName: i.product.name,
         size: i.size,
@@ -150,7 +161,30 @@ export default function CheckoutPage() {
       shippingFee,
       grandTotal: currentGrandTotal,
       status: "pending",
-    });
+      discountCode: discountApplied?.code ?? "",
+      discountAmount,
+    };
+
+    try {
+      await bs.saveOrder(orderPayload);
+    } catch (err) {
+      console.error("Failed to save order:", err);
+    }
+
+    // Fire GA purchase event
+    if (typeof window.gtag !== "undefined") {
+      window.gtag("event", "purchase", {
+        transaction_id: orderNum,
+        value: currentGrandTotal,
+        currency: "PKR",
+        items: cartItems.map((item) => ({
+          item_id: item.product.id,
+          item_name: item.product.name,
+          quantity: item.qty,
+          price: item.product.discountPrice ?? item.product.price,
+        })),
+      });
+    }
 
     setSavedOrder({
       form: currentForm,
@@ -161,7 +195,6 @@ export default function CheckoutPage() {
     setSubmitted(true);
   };
 
-  // Auto-open WhatsApp 1.5 seconds after order is placed
   useEffect(() => {
     if (!submitted || !savedOrder) return;
     const timer = setTimeout(() => {
@@ -187,7 +220,6 @@ export default function CheckoutPage() {
     );
   }
 
-  // Success screen
   if (submitted && savedOrder) {
     const { form: sf, grandTotal: sgt, paymentMethod: spm } = savedOrder;
     const waMsg = encodeURIComponent(
@@ -283,7 +315,6 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <Link
             to="/cart"
@@ -301,7 +332,7 @@ export default function CheckoutPage() {
         <div className="grid lg:grid-cols-[1fr_380px] gap-10">
           {/* Left: Form */}
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Order Summary (mobile toggle) */}
+            {/* Mobile order summary toggle */}
             <div className="lg:hidden bg-card rounded-sm border border-border">
               <button
                 type="button"
@@ -400,7 +431,6 @@ export default function CheckoutPage() {
                     </p>
                   )}
                 </div>
-
                 <div>
                   <label
                     className="block text-sm font-medium mb-1"
@@ -426,7 +456,6 @@ export default function CheckoutPage() {
                     </p>
                   )}
                 </div>
-
                 <div>
                   <label
                     className="block text-sm font-medium mb-1"
@@ -452,7 +481,6 @@ export default function CheckoutPage() {
                     </p>
                   )}
                 </div>
-
                 <div className="sm:col-span-2">
                   <label
                     className="block text-sm font-medium mb-1"
@@ -635,7 +663,7 @@ export default function CheckoutPage() {
             </Button>
           </form>
 
-          {/* Right: Order Summary (desktop) */}
+          {/* Right: Desktop Order Summary */}
           <div className="hidden lg:block space-y-4">
             <div className="bg-card rounded-sm border border-border p-5 sticky top-24">
               <h3 className="font-display text-lg font-bold mb-4">
@@ -691,20 +719,20 @@ export default function CheckoutPage() {
                     <span>-Rs. {discountAmount.toLocaleString()}</span>
                   </div>
                 )}
-                <div className="flex justify-between font-bold text-base border-t border-border pt-2 mt-2">
+                <div className="flex justify-between font-bold text-base border-t border-border pt-2">
                   <span>Total</span>
                   <span>Rs. {grandTotal.toLocaleString()}</span>
                 </div>
               </div>
-              <div className="mt-4 p-3 bg-secondary/50 rounded-sm">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Truck className="h-3.5 w-3.5" />
-                  <span>
-                    {shippingFee === 0
-                      ? "\u2705 You qualify for FREE delivery!"
-                      : `Add Rs. ${(FREE_THRESHOLD - productTotal).toLocaleString()} more for free delivery`}
+              <div className="mt-4 flex flex-wrap gap-2 justify-center">
+                {["COD", "EasyPaisa", "JazzCash"].map((m) => (
+                  <span
+                    key={m}
+                    className="text-xs bg-secondary px-2.5 py-1 rounded-full font-medium text-muted-foreground"
+                  >
+                    {m}
                   </span>
-                </div>
+                ))}
               </div>
             </div>
           </div>

@@ -1,26 +1,11 @@
-import { getSettings } from "@/utils/settingsStorage";
+import { useStore } from "@/context/StoreContext";
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function AnnouncementBar() {
   const [visible, setVisible] = useState(true);
-  const [code, setCode] = useState(
-    () => getSettings().announcementCode || "FIRST10",
-  );
-
-  // Re-read code whenever admin saves settings
-  useEffect(() => {
-    const refresh = () => {
-      setCode(getSettings().announcementCode || "FIRST10");
-    };
-    window.addEventListener("storage", refresh);
-    // Also poll every 2s in case same-tab update (admin panel)
-    const interval = setInterval(refresh, 2000);
-    return () => {
-      window.removeEventListener("storage", refresh);
-      clearInterval(interval);
-    };
-  }, []);
+  const { settings } = useStore();
+  const code = settings.announcementCode || "FIRST10";
 
   if (!visible) return null;
 

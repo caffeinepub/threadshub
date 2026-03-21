@@ -1,6 +1,7 @@
 import AnnouncementBar from "@/components/AnnouncementBar";
 import { useCart } from "@/context/CartContext";
-import { getSettings } from "@/utils/settingsStorage";
+import { useStore } from "@/context/StoreContext";
+import * as bs from "@/lib/backendService";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -44,21 +45,11 @@ function EmailCaptureModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
-    try {
-      const existing: { email: string; timestamp: string; source: string }[] =
-        JSON.parse(localStorage.getItem("th_subscribers") || "[]");
-      const alreadyExists = existing.some(
-        (s) => s.email.toLowerCase() === email.toLowerCase(),
-      );
-      if (!alreadyExists) {
-        existing.push({
-          email: email.trim().toLowerCase(),
-          timestamp: new Date().toISOString(),
-          source: "navbar_popup",
-        });
-        localStorage.setItem("th_subscribers", JSON.stringify(existing));
-      }
-    } catch {}
+    bs.saveSubscriber({
+      email: email.trim().toLowerCase(),
+      whatsapp: "",
+      date: new Date().toISOString(),
+    }).catch(() => {});
     setSubmitted(true);
   };
 
@@ -203,13 +194,13 @@ function ContactUsModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const existing: unknown[] = JSON.parse(
-        localStorage.getItem("th_contact_submissions") || "[]",
-      );
-      existing.push({ ...form, timestamp: new Date().toISOString() });
-      localStorage.setItem("th_contact_submissions", JSON.stringify(existing));
-    } catch {}
+    bs.saveContact({
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      message: form.message,
+      date: new Date().toISOString(),
+    }).catch(() => {});
     const waMsg = encodeURIComponent(
       `Hi, I have a query:\nName: ${form.name}\nEmail: ${form.email}\nPhone: ${form.phone}\nMessage: ${form.message}`,
     );
@@ -569,22 +560,37 @@ function TrackOrderModal({
 
   const handleTrack = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const orders: OrderRecord[] = JSON.parse(
-        localStorage.getItem("threadshub_orders") || "[]",
-      );
-      const found = orders.find(
-        (o) =>
-          o.id.toLowerCase() === orderId.trim().toLowerCase() &&
-          (o.phone.includes(contact.trim()) ||
-            (o.email || "")
-              .toLowerCase()
-              .includes(contact.trim().toLowerCase())),
-      );
-      setResult(found || "not_found");
-    } catch {
-      setResult("not_found");
-    }
+    bs.fetchOrders()
+      .then((orders) => {
+        const found = orders.find(
+          (o) =>
+            o.id.toLowerCase() === orderId.trim().toLowerCase() &&
+            (o.phone.includes(contact.trim()) ||
+              (o.email || "")
+                .toLowerCase()
+                .includes(contact.trim().toLowerCase())),
+        );
+        if (found) {
+          setResult({
+            id: found.id,
+            phone: found.phone,
+            email: found.email,
+            total: found.grandTotal,
+            status: found.status as OrderStatus,
+            items: found.items.map((i) => ({
+              name: i.productName,
+              qty: i.qty,
+              price: i.price,
+            })),
+            createdAt: found.date,
+            name: found.customerName,
+            city: found.city,
+          });
+        } else {
+          setResult("not_found");
+        }
+      })
+      .catch(() => setResult("not_found"));
   };
 
   const handleClose = () => {
@@ -817,7 +823,8 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const [storeName, setStoreName] = useState(() => getSettings().storeName);
+  const { settings } = useStore();
+  const storeName = settings.storeName || "ThreadsHub";
 
   const isProductPage = location.pathname.startsWith("/product/");
 
@@ -832,12 +839,6 @@ export default function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [isProductPage]);
-
-  useEffect(() => {
-    const handler = () => setStoreName(getSettings().storeName);
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, []);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: setDrawerOpen is stable
   useEffect(() => {
@@ -880,7 +881,7 @@ export default function Navbar() {
           ? "bg-transparent border-b border-transparent"
           : "bg-background/95 backdrop-blur-sm border-b border-border shadow-sm"
       }`
-    : "sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border";
+    : "fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border transition-all duration-300";
 
   const iconColor = isTransparent
     ? "text-white hover:text-white/80"
@@ -905,7 +906,11 @@ export default function Navbar() {
               <Menu className="h-5 w-5" />
             </button>
 
-            <Link to="/" className="flex items-center gap-0 flex-shrink-0">
+            <Link
+              to="/"
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className="flex items-center gap-0 flex-shrink-0"
+            >
               <span
                 className={`font-display text-2xl font-bold tracking-tight transition-colors ${logoColor}`}
               >
@@ -999,7 +1004,7 @@ export default function Navbar() {
 
       {/* Spacer: only on non-product pages (where navbar is sticky it takes space naturally;
           on product pages navbar is fixed so page content starts at top) */}
-      {!isProductPage && <div className="h-0" />}
+      {!isProductPage && <div className="h-[104px]" />}
 
       {/* ── Left Drawer (mobile) ────────────────────────────── */}
       <AnimatePresence>

@@ -29,29 +29,16 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import type { Discount } from "@/utils/discountStorage";
-import {
-  deleteDiscount,
-  getDiscounts,
-  saveDiscount,
-  toggleDiscount,
-} from "@/utils/discountStorage";
-import type { Order } from "@/utils/orderStorage";
-import {
-  deleteOrder,
-  getAllOrders,
-  updateOrderStatus,
-} from "@/utils/orderStorage";
-import type { Product } from "@/utils/productStorage";
-import {
-  deleteProduct,
-  generateProductId,
-  getProducts,
-  saveProduct,
-  updateProduct,
-} from "@/utils/productStorage";
-import type { StoreSettings } from "@/utils/settingsStorage";
-import { getSettings, saveSettings } from "@/utils/settingsStorage";
+import type { Product } from "@/data/products";
+import * as bs from "@/lib/backendService";
+import type {
+  FrontendDiscount,
+  FrontendOrder,
+  FrontendSettings,
+} from "@/lib/backendService";
+type Order = FrontendOrder;
+type Discount = FrontendDiscount;
+type StoreSettings = FrontendSettings;
 import {
   BarChart3,
   ChevronDown,
@@ -376,6 +363,7 @@ const EMPTY_PRODUCT: Omit<Product, "id"> = {
   fabric: "",
   rating: 4.5,
   reviewCount: 0,
+  soldCount: 500,
   shortDescription: "",
   deliveryThreshold: "Above Rs. 2,000",
   returnDays: 7,
@@ -384,7 +372,8 @@ const EMPTY_PRODUCT: Omit<Product, "id"> = {
 };
 
 function ProductsSection() {
-  const [products, setProducts] = useState<Product[]>(() => getProducts());
+  const [products, setProducts] = useState<Product[]>([]);
+  const [_loadingProds, setLoadingProds] = useState(true);
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -402,7 +391,19 @@ function ProductsSection() {
   const [imgPreview3, setImgPreview3] = useState("");
   const [imgPreview4, setImgPreview4] = useState("");
 
-  const reload = () => setProducts(getProducts());
+  const reload = async () => {
+    const p = await bs.fetchProducts();
+    setProducts(p);
+  };
+
+  useEffect(() => {
+    bs.fetchProducts()
+      .then((p) => {
+        setProducts(p);
+        setLoadingProds(false);
+      })
+      .catch(() => setLoadingProds(false));
+  }, []);
 
   const filtered = products.filter(
     (p) =>
@@ -445,6 +446,7 @@ function ProductsSection() {
       fabric: p.fabric ?? "",
       rating: p.rating ?? 4.5,
       reviewCount: p.reviewCount ?? 0,
+      soldCount: p.soldCount ?? 500,
       shortDescription: p.shortDescription ?? "",
       deliveryThreshold: p.deliveryThreshold ?? "Above Rs. 2,000",
       returnDays: p.returnDays ?? 7,
@@ -487,10 +489,12 @@ function ProductsSection() {
       reader.readAsDataURL(file);
     };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const payload: Product = {
       ...form,
-      id: editingId ?? generateProductId(),
+      id:
+        editingId ??
+        `prod_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       sizes: sizesInput
         .split(",")
         .map((s) => s.trim())
@@ -514,21 +518,24 @@ function ProductsSection() {
       toast.error("Product name is required");
       return;
     }
-    if (editingId) {
-      updateProduct(payload);
-      toast.success("Product updated");
-    } else {
-      saveProduct(payload);
-      toast.success("Product added");
+    try {
+      await bs.saveProduct(payload);
+      toast.success(editingId ? "Product updated" : "Product added");
+      await reload();
+      setDialogOpen(false);
+    } catch {
+      toast.error("Failed to save product");
     }
-    reload();
-    setDialogOpen(false);
   };
 
-  const handleDelete = (id: string) => {
-    deleteProduct(id);
-    toast.success("Product deleted");
-    reload();
+  const handleDelete = async (id: string) => {
+    try {
+      await bs.removeProduct(id);
+      toast.success("Product deleted");
+      await reload();
+    } catch {
+      toast.error("Failed to delete product");
+    }
     setDeleteConfirm(null);
   };
 
@@ -545,13 +552,88 @@ function ProductsSection() {
             data-ocid="products.search_input"
           />
         </div>
-        <Button
-          onClick={openAdd}
-          className="bg-slate-900 hover:bg-slate-800 text-white gap-2"
-          data-ocid="products.add_button"
-        >
-          <Plus className="h-4 w-4" /> Add Product
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={openAdd}
+            className="bg-slate-900 hover:bg-slate-800 text-white gap-2"
+            data-ocid="products.add_button"
+          >
+            <Plus className="h-4 w-4" /> Add Product
+          </Button>
+          <label htmlFor="csv-import" className="cursor-pointer">
+            <span className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+              <Package className="h-4 w-4" /> Bulk CSV
+            </span>
+            <input
+              id="csv-import"
+              type="file"
+              accept=".csv"
+              className="sr-only"
+              data-ocid="products.upload_button"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const text = await file.text();
+                const lines = text.split("\n").filter(Boolean);
+                const headers = lines[0].split(",").map((h) => h.trim());
+                const parsed = lines
+                  .slice(1)
+                  .map((line) => {
+                    const vals = line.split(",");
+                    const obj: Record<string, string> = {};
+                    headers.forEach((h, i) => {
+                      obj[h] = (vals[i] ?? "").trim();
+                    });
+                    return {
+                      id: `prod_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+                      name: obj.name ?? "",
+                      description: obj.description ?? "",
+                      shortDescription: "",
+                      price: Number(obj.price) || 0,
+                      discountPrice: obj.discountPrice
+                        ? Number(obj.discountPrice)
+                        : undefined,
+                      category: (obj.category as Product["category"]) ?? "Men",
+                      type: "Shirt" as const,
+                      image: obj.image ?? "",
+                      image2: undefined,
+                      image3: undefined,
+                      image4: undefined,
+                      featured: false,
+                      newArrival: false,
+                      isBestSeller: false,
+                      sizes: (obj.sizes ?? "S,M,L,XL")
+                        .split(";")
+                        .map((s) => s.trim()),
+                      colors: (obj.colors ?? "White")
+                        .split(";")
+                        .map((c) => c.trim()),
+                      stock: Number(obj.stock) || 50,
+                      fabric: obj.fabric ?? "",
+                      rating: Number(obj.rating) || 4.5,
+                      reviewCount: 0,
+                      soldCount: Number(obj.soldCount) || 0,
+                      reviews: [],
+                      colorImages: {},
+                    } as Product;
+                  })
+                  .filter((p) => p.name);
+                if (parsed.length === 0) {
+                  toast.error("No valid products found in CSV");
+                  return;
+                }
+                try {
+                  const count = await bs.bulkImportProducts(parsed);
+                  toast.success(`Imported ${count} products successfully`);
+                  await reload();
+                } catch {
+                  toast.error("Bulk import failed");
+                }
+                e.target.value = "";
+              }}
+            />
+          </label>
+        </div>
       </div>
 
       <Card className="border-slate-200 shadow-sm">
@@ -859,6 +941,21 @@ function ProductsSection() {
                     }))
                   }
                   data-ocid="products.reviewcount.input"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Sold Count</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.soldCount ?? 500}
+                  onChange={(e) =>
+                    setForm((p) => ({
+                      ...p,
+                      soldCount: Number(e.target.value),
+                    }))
+                  }
+                  data-ocid="products.soldcount.input"
                 />
               </div>
               <div className="space-y-1">
@@ -1434,31 +1531,68 @@ function ProductsSection() {
 
 // ─── Orders ──────────────────────────────────────────────────────────────────
 function OrdersSection() {
-  const [orders, setOrders] = useState<Order[]>(() => getAllOrders());
+  const [orders, setOrders] = useState<Order[]>([]);
   const [filter, setFilter] = useState<Order["status"] | "all">("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const reload = () => setOrders(getAllOrders());
-
-  const filtered =
-    filter === "all" ? orders : orders.filter((o) => o.status === filter);
-
-  const handleStatus = (id: string, status: Order["status"]) => {
-    updateOrderStatus(id, status);
-    reload();
-    toast.success("Status updated");
+  const reload = async () => {
+    const o = await bs.fetchOrders();
+    setOrders(o);
   };
 
-  const handleDelete = (id: string) => {
-    deleteOrder(id);
-    reload();
+  useEffect(() => {
+    bs.fetchOrders()
+      .then(setOrders)
+      .catch(() => {});
+  }, []);
+
+  const baseFiltered =
+    filter === "all" ? orders : orders.filter((o) => o.status === filter);
+
+  const filtered = searchQuery.trim()
+    ? baseFiltered.filter((o) => {
+        const q = searchQuery.toLowerCase();
+        return (
+          o.id.toLowerCase().includes(q) ||
+          (o.customerName || "").toLowerCase().includes(q) ||
+          (o.phone || "").toLowerCase().includes(q) ||
+          (o.city || "").toLowerCase().includes(q)
+        );
+      })
+    : baseFiltered;
+
+  const handleStatus = async (id: string, status: string) => {
+    try {
+      await bs.changeOrderStatus(id, status);
+      await reload();
+      toast.success("Status updated");
+    } catch {
+      toast.error("Failed to update status");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await bs.changeOrderStatus(id, "cancelled");
+      await reload();
+      toast.success("Order cancelled");
+    } catch {
+      toast.error("Failed to cancel order");
+    }
     setDeleteConfirm(null);
-    toast.success("Order deleted");
   };
 
   return (
     <div className="space-y-4">
+      <Input
+        placeholder="Search by order ID, name, phone, city..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="max-w-sm"
+        data-ocid="orders.search_input"
+      />
       <Tabs
         value={filter}
         onValueChange={(v) => setFilter(v as Order["status"] | "all")}
@@ -1667,8 +1801,13 @@ function OrdersSection() {
 
 // ─── Customers ────────────────────────────────────────────────────────────────
 function CustomersSection() {
-  const orders = getAllOrders();
+  const [orders, setOrders] = useState<Order[]>([]);
   const [search, setSearch] = useState("");
+  useEffect(() => {
+    bs.fetchOrders()
+      .then(setOrders)
+      .catch(() => {});
+  }, []);
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
 
   type CustomerSummary = {
@@ -1854,7 +1993,13 @@ function CustomersSection() {
 
 // ─── Payments ────────────────────────────────────────────────────────────────
 function PaymentsSection() {
-  const orders = getAllOrders().filter((o) => o.status !== "cancelled");
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
+  useEffect(() => {
+    bs.fetchOrders()
+      .then(setAllOrders)
+      .catch(() => {});
+  }, []);
+  const orders = allOrders.filter((o) => o.status !== "cancelled");
   const total = orders.reduce((s, o) => s + o.grandTotal, 0);
   const codTotal = orders
     .filter((o) => o.paymentMethod === "cod")
@@ -1863,7 +2008,7 @@ function PaymentsSection() {
     .filter((o) => o.paymentMethod === "card")
     .reduce((s, o) => s + o.grandTotal, 0);
   const avg = orders.length ? Math.round(total / orders.length) : 0;
-  const recent = getAllOrders().slice(0, 10);
+  const recent = allOrders.slice(0, 10);
 
   return (
     <div className="space-y-6">
@@ -1983,8 +2128,21 @@ function PaymentsSection() {
 
 // ─── Shipping ────────────────────────────────────────────────────────────────
 function ShippingSection() {
-  const orders = getAllOrders();
-  const settings = getSettings();
+  const [orders, setOrders] = useState<Order[]>([]);
+  useEffect(() => {
+    bs.fetchOrders()
+      .then(setOrders)
+      .catch(() => {});
+  }, []);
+  const [settings, setSettings] = useState({
+    deliveryFee: 250,
+    freeShippingThreshold: 2000,
+  });
+  useEffect(() => {
+    bs.fetchSettings()
+      .then((s) => setSettings(s))
+      .catch(() => {});
+  }, []);
   const pending = orders.filter(
     (o) => o.status === "pending" || o.status === "confirmed",
   ).length;
@@ -2079,15 +2237,24 @@ function ShippingSection() {
 
 // ─── Discounts ───────────────────────────────────────────────────────────────
 function DiscountsSection() {
-  const [discounts, setDiscounts] = useState<Discount[]>(() => getDiscounts());
+  const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [code, setCode] = useState("");
   const [percent, setPercent] = useState(10);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const reload = () => setDiscounts(getDiscounts());
+  const reload = async () => {
+    const d = await bs.fetchDiscounts();
+    setDiscounts(d);
+  };
 
-  const handleAdd = () => {
+  useEffect(() => {
+    bs.fetchDiscounts()
+      .then(setDiscounts)
+      .catch(() => {});
+  }, []);
+
+  const handleAdd = async () => {
     if (!code.trim()) {
       toast.error("Code is required");
       return;
@@ -2096,23 +2263,31 @@ function DiscountsSection() {
       toast.error("Percent must be 1-100");
       return;
     }
-    saveDiscount({
-      code: code.trim().toUpperCase(),
-      percent,
-      active: true,
-      usageCount: 0,
-    });
-    toast.success("Discount code added");
-    reload();
-    setDialogOpen(false);
-    setCode("");
-    setPercent(10);
+    try {
+      await bs.saveDiscount({
+        code: code.trim().toUpperCase(),
+        percent,
+        active: true,
+        usageCount: 0,
+      });
+      toast.success("Discount code added");
+      await reload();
+      setDialogOpen(false);
+      setCode("");
+      setPercent(10);
+    } catch {
+      toast.error("Failed to add discount");
+    }
   };
 
-  const handleDelete = (c: string) => {
-    deleteDiscount(c);
-    toast.success("Discount deleted");
-    reload();
+  const handleDelete = async (c: string) => {
+    try {
+      await bs.removeDiscount(c);
+      toast.success("Discount deleted");
+      await reload();
+    } catch {
+      toast.error("Failed to delete");
+    }
     setDeleteConfirm(null);
   };
 
@@ -2176,9 +2351,9 @@ function DiscountsSection() {
                     <TableCell>
                       <button
                         type="button"
-                        onClick={() => {
-                          toggleDiscount(d.code);
-                          reload();
+                        onClick={async () => {
+                          await bs.saveDiscount({ ...d, active: !d.active });
+                          await reload();
                         }}
                         data-ocid={`discounts.toggle.${i + 1}`}
                       >
@@ -2293,7 +2468,12 @@ function DiscountsSection() {
 
 // ─── Analytics ───────────────────────────────────────────────────────────────
 function AnalyticsSection() {
-  const orders = getAllOrders();
+  const [orders, setOrders] = useState<Order[]>([]);
+  useEffect(() => {
+    bs.fetchOrders()
+      .then(setOrders)
+      .catch(() => {});
+  }, []);
 
   const last7 = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date();
@@ -2480,17 +2660,36 @@ function AnalyticsSection() {
 
 // ─── Settings ────────────────────────────────────────────────────────────────
 function SettingsSection() {
-  const [form, setForm] = useState<StoreSettings>(() => getSettings());
+  const [form, setForm] = useState<StoreSettings>(() => ({
+    storeName: "ThreadsHub",
+    whatsappNumber: "03174933882",
+    easyPaisaNumber: "03041329809",
+    contactEmail: "mirzayasir592@gmail.com",
+    deliveryFee: 250,
+    freeShippingThreshold: 2000,
+    currency: "PKR",
+    heroImage: "",
+    announcementCode: "FIRST10",
+    popupCode: "SUMMER26",
+  }));
   const [saving, setSaving] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    bs.fetchSettings()
+      .then(setForm)
+      .catch(() => {});
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setTimeout(() => {
-      saveSettings(form);
+    try {
+      await bs.updateSettings(form);
       toast.success("Settings saved successfully");
-      setSaving(false);
-    }, 400);
+    } catch {
+      toast.error("Failed to save settings");
+    }
+    setSaving(false);
   };
 
   return (
@@ -2627,30 +2826,20 @@ function SettingsSection() {
 
 // ─── Subscribers Section ──────────────────────────────────────────────────────
 function SubscribersSection() {
-  const [subscribers, setSubscribers] = useState<
-    { email: string; timestamp: string; source: string }[]
-  >([]);
-  const [contacts, setContacts] = useState<
-    {
-      name: string;
-      email: string;
-      phone: string;
-      message: string;
-      timestamp: string;
-    }[]
-  >([]);
+  const [subscribers, setSubscribers] = useState<bs.FrontendSubscriber[]>([]);
+  const [contacts, setContacts] = useState<bs.FrontendContact[]>([]);
+  const [selectedContacts, setSelectedContacts] = useState<Set<number>>(
+    new Set(),
+  );
+  const [selectedSubs, setSelectedSubs] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    try {
-      setSubscribers(
-        JSON.parse(localStorage.getItem("th_subscribers") || "[]"),
-      );
-    } catch {}
-    try {
-      setContacts(
-        JSON.parse(localStorage.getItem("th_contact_submissions") || "[]"),
-      );
-    } catch {}
+    bs.fetchSubscribers()
+      .then(setSubscribers)
+      .catch(() => {});
+    bs.fetchContacts()
+      .then(setContacts)
+      .catch(() => {});
   }, []);
 
   const exportCSV = () => {
@@ -2658,8 +2847,8 @@ function SubscribersSection() {
       ["Email", "Date Subscribed", "Source"],
       ...subscribers.map((s) => [
         s.email,
-        new Date(s.timestamp).toLocaleDateString("en-PK"),
-        s.source,
+        new Date(s.date).toLocaleDateString("en-PK"),
+        s.whatsapp || "email",
       ]),
     ];
     const csv = rows.map((r) => r.join(",")).join("\n");
@@ -2672,21 +2861,98 @@ function SubscribersSection() {
     URL.revokeObjectURL(url);
   };
 
+  const deleteSelectedContacts = async () => {
+    const toDelete = contacts.filter((_, i) => selectedContacts.has(i));
+    await Promise.all(
+      toDelete.map((c) => bs.removeContact(c.id).catch(() => {})),
+    );
+    const updated = contacts.filter((_, i) => !selectedContacts.has(i));
+    setContacts(updated);
+    setSelectedContacts(new Set());
+    toast.success("Selected messages deleted");
+  };
+
+  const deleteSelectedSubs = async () => {
+    const toDelete = subscribers.filter((_, i) => selectedSubs.has(i));
+    await Promise.all(
+      toDelete.map((s) => bs.removeSubscriber(s.id).catch(() => {})),
+    );
+    const updated = subscribers.filter((_, i) => !selectedSubs.has(i));
+    setSubscribers(updated);
+    setSelectedSubs(new Set());
+    toast.success("Selected subscribers deleted");
+  };
+
+  const toggleContact = (i: number) => {
+    setSelectedContacts((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  };
+
+  const toggleSub = (i: number) => {
+    setSelectedSubs((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Contact Form Messages */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base font-bold">
-            Contact Form Messages
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Customer inquiries submitted via the Contact Us form
-          </p>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <CardTitle className="text-base font-bold">
+                Contact Form Messages
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Customer inquiries submitted via the Contact Us form
+              </p>
+            </div>
+            {contacts.length > 0 && (
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedContacts.size === contacts.length}
+                    onChange={(e) =>
+                      setSelectedContacts(
+                        e.target.checked
+                          ? new Set(contacts.map((_, i) => i))
+                          : new Set(),
+                      )
+                    }
+                    className="rounded"
+                    data-ocid="contacts.select_all.checkbox"
+                  />
+                  Select All
+                </label>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  disabled={selectedContacts.size === 0}
+                  onClick={deleteSelectedContacts}
+                  data-ocid="contacts.delete_button"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1" />
+                  Delete ({selectedContacts.size})
+                </Button>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {contacts.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
+            <p
+              className="text-sm text-muted-foreground text-center py-8"
+              data-ocid="contacts.empty_state"
+            >
               No contact submissions yet.
             </p>
           ) : (
@@ -2695,24 +2961,33 @@ function SubscribersSection() {
                 <div
                   // biome-ignore lint/suspicious/noArrayIndexKey: no stable id
                   key={i}
-                  className="border border-border rounded-xl p-4 space-y-1.5"
+                  className={`border rounded-xl p-4 space-y-1.5 transition-colors ${selectedContacts.has(i) ? "border-primary bg-primary/5" : "border-border"}`}
                 >
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <span className="font-semibold text-sm text-foreground">
-                      {c.name}
-                    </span>
+                  <div className="flex items-start justify-between flex-wrap gap-2">
+                    <label className="flex items-center gap-2 cursor-pointer flex-1">
+                      <input
+                        type="checkbox"
+                        checked={selectedContacts.has(i)}
+                        onChange={() => toggleContact(i)}
+                        className="rounded mt-0.5 flex-shrink-0"
+                        data-ocid={`contacts.checkbox.${i + 1}`}
+                      />
+                      <span className="font-semibold text-sm text-foreground">
+                        {c.name}
+                      </span>
+                    </label>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(c.timestamp).toLocaleDateString("en-PK", {
+                      {new Date(c.date).toLocaleDateString("en-PK", {
                         year: "numeric",
                         month: "short",
                         day: "numeric",
                       })}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground pl-6">
                     {c.email} {c.phone ? `| ${c.phone}` : ""}
                   </p>
-                  <p className="text-sm text-foreground/80 bg-muted/50 rounded-lg p-2.5 mt-1">
+                  <p className="text-sm text-foreground/80 bg-muted/50 rounded-lg p-2.5 mt-1 ml-6">
                     {c.message}
                   </p>
                 </div>
@@ -2734,25 +3009,56 @@ function SubscribersSection() {
                 Collected via navbar email capture popup
               </p>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={exportCSV}
-              disabled={subscribers.length === 0}
-            >
-              Export CSV
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={exportCSV}
+                disabled={subscribers.length === 0}
+              >
+                Export CSV
+              </Button>
+              {selectedSubs.size > 0 && (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={deleteSelectedSubs}
+                  data-ocid="subscribers.delete_button"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1" />
+                  Delete ({selectedSubs.size})
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           {subscribers.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
+            <p
+              className="text-sm text-muted-foreground text-center py-8"
+              data-ocid="subscribers.empty_state"
+            >
               No subscribers yet. Email captures will appear here.
             </p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-8">
+                    <input
+                      type="checkbox"
+                      checked={selectedSubs.size === subscribers.length}
+                      onChange={(e) =>
+                        setSelectedSubs(
+                          e.target.checked
+                            ? new Set(subscribers.map((_, i) => i))
+                            : new Set(),
+                        )
+                      }
+                      className="rounded"
+                      data-ocid="subscribers.select_all.checkbox"
+                    />
+                  </TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Date Subscribed</TableHead>
                   <TableHead>Source</TableHead>
@@ -2763,12 +3069,22 @@ function SubscribersSection() {
                   <TableRow
                     // biome-ignore lint/suspicious/noArrayIndexKey: no stable id
                     key={i}
+                    className={selectedSubs.has(i) ? "bg-primary/5" : ""}
                   >
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        checked={selectedSubs.has(i)}
+                        onChange={() => toggleSub(i)}
+                        className="rounded"
+                        data-ocid={`subscribers.checkbox.${i + 1}`}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium text-sm">
                       {s.email}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {new Date(s.timestamp).toLocaleDateString("en-PK", {
+                      {new Date(s.date).toLocaleDateString("en-PK", {
                         year: "numeric",
                         month: "short",
                         day: "numeric",
@@ -2776,7 +3092,7 @@ function SubscribersSection() {
                     </TableCell>
                     <TableCell>
                       <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-                        {s.source}
+                        {s.whatsapp || "email"}
                       </span>
                     </TableCell>
                   </TableRow>
@@ -2797,8 +3113,17 @@ export default function AdminPage() {
   );
   const [section, setSection] = useState<Section>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const orders = getAllOrders();
-  const products = getProducts();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    Promise.all([bs.fetchOrders(), bs.fetchProducts()])
+      .then(([o, p]) => {
+        setOrders(o);
+        setProducts(p);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     document.title = `ThreadsHub Admin — ${section.charAt(0).toUpperCase() + section.slice(1)}`;

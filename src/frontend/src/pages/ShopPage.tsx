@@ -1,8 +1,8 @@
 import ProductCard from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
+import { useStore } from "@/context/StoreContext";
 import { categories, productTypes } from "@/data/products";
 import type { Category, ProductType } from "@/data/products";
-import { getProducts } from "@/utils/productStorage";
 import { useSearch } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -21,6 +21,7 @@ const PAGE_HEADINGS: Record<string, string> = {
 
 export default function ShopPage() {
   const search = useSearch({ strict: false }) as ShopSearch;
+  const { products } = useStore();
   const initialCategory: Category | "All" =
     search.category && (categories as string[]).includes(search.category)
       ? (search.category as Category)
@@ -31,12 +32,10 @@ export default function ShopPage() {
   );
   const [activeType, setActiveType] = useState<ProductType | "All">("All");
   const [searchText, setSearchText] = useState("");
-  const [products, setProducts] = useState(() => getProducts());
   const [discountBanner, setDiscountBanner] = useState(
     () => sessionStorage.getItem("pendingDiscount") || "",
   );
 
-  // Update active category when URL changes
   useEffect(() => {
     if (search.category && (categories as string[]).includes(search.category)) {
       setActiveCategory(search.category as Category);
@@ -44,19 +43,6 @@ export default function ShopPage() {
       setActiveCategory("All");
     }
   }, [search.category]);
-
-  // Listen for product changes (admin edits)
-  useEffect(() => {
-    const handler = () => setProducts(getProducts());
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, []);
-
-  useEffect(() => {
-    const handler = () => setProducts(getProducts());
-    document.addEventListener("visibilitychange", handler);
-    return () => document.removeEventListener("visibilitychange", handler);
-  }, []);
 
   const filtered = products.filter((p) => {
     const matchCat = activeCategory === "All" || p.category === activeCategory;
@@ -112,7 +98,6 @@ export default function ShopPage() {
           </p>
         </div>
 
-        {/* Filters — only show if not using filter param */}
         {!search.filter && (
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
             <div className="relative flex-1 max-w-sm">
@@ -126,7 +111,6 @@ export default function ShopPage() {
               />
             </div>
 
-            {/* Category filter */}
             <div className="flex gap-2 flex-wrap">
               {(["All", ...categories] as (Category | "All")[]).map((cat) => (
                 <button
@@ -147,7 +131,6 @@ export default function ShopPage() {
           </div>
         )}
 
-        {/* Type filter */}
         {!search.filter && activeCategory !== "All" && (
           <div className="flex gap-2 flex-wrap mb-8">
             {(["All", ...productTypes] as (ProductType | "All")[]).map(
@@ -170,7 +153,6 @@ export default function ShopPage() {
           </div>
         )}
 
-        {/* Products grid */}
         {filtered.length === 0 ? (
           <div className="text-center py-24" data-ocid="shop.empty_state">
             <p className="font-display text-2xl mb-2">No products found</p>

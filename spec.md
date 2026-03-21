@@ -1,31 +1,44 @@
 # ThreadsHub
 
 ## Current State
-Navbar has hamburger button on right side, mobile menu opens as dropdown from top. No search bar. No email capture. Menu has: Home, Men, Women, Boys, Girls, Baby, New Arrivals, Best Sellers, Contact. Admin panel has 9 sections (no email subscribers).
+- Entire app runs on localStorage only — backend (main.mo) is empty actor {}
+- Admin changes only persist in the browser where they are made — no cross-device sync
+- No bulk product upload
+- No GA purchase event tracking
+- Images loaded from external URLs (slow)
+- Shipping rules exist in StoreSettings but freeShippingThreshold may not be fully wired
+- No abandoned cart reminder UI
 
 ## Requested Changes (Diff)
 
 ### Add
-- Search icon in navbar right side (between email capture and cart)
-- Email capture icon/button in navbar right side (between search and cart), opens a modal with CTA "Unlock 10% OFF Instantly" -- user enters email, gets FIRST10 code, email saved to localStorage
-- Admin Panel: new "Subscribers" section (10th section) showing list of captured emails with timestamp
-- Menu item: "Contact Us" (below categories) -- opens a modal with Name, Email, Phone, Comment fields + WhatsApp link to notify 03174933882
-- Menu item: "Help" (below Contact Us) -- opens Help Center modal with clickable cards: FAQs, Privacy Policy, Shipping, Return and Exchange, Item Availability, Gift Cards, Terms & Conditions, Clothing Care -- each card opens its detailed info
-- Menu item: "Track Your Order" (last item) -- opens modal with Order ID + Email/Phone fields to look up order status from localStorage orders
+- Motoko backend: persistent storage for Products, Orders, StoreSettings, Discounts, Contacts, EmailSubscribers
+- Backend CRUD: getProducts, addProduct, updateProduct, deleteProduct, bulkImportProducts
+- Backend CRUD: getOrders, addOrder, updateOrderStatus
+- Backend: getSettings, saveSettings
+- Backend: getDiscounts, addDiscount, updateDiscount, deleteDiscount
+- Backend: addContact, getContacts, deleteContact
+- Backend: addSubscriber, getSubscribers, deleteSubscriber
+- Admin panel: CSV bulk product import (upload CSV → parse → bulk save to backend)
+- GA purchase event tracking (send purchase event on order confirmation)
+- Image lazy loading with loading="lazy" on non-critical images
+- Shipping rules: freeShippingThreshold editable in admin Settings and enforced at checkout
 
 ### Modify
-- Hamburger button moves from RIGHT side to LEFT side of navbar (before the logo)
-- Mobile menu changes from top-dropdown to LEFT-SIDE sliding drawer (slide from left, full height)
-- Cart icon stays on right side -- no change
-- Admin Section type and NAV_ITEMS updated to include "subscribers" section
+- Frontend: all localStorage reads/writes replaced with backend canister calls
+- CartContext: on order placement, save to backend via addOrder
+- AdminPage: all product/order/settings/discounts/contacts/subscribers CRUD via backend
+- CheckoutPage: on order confirm, fire GA purchase event
+- AnnouncementBar: read settings from backend
+- ExitIntentPopup: read popup discount code from backend settings
 
 ### Remove
-- Nothing removed
+- All localStorage usage for products, orders, settings, discounts, contacts, subscribers (keep cart in memory as before)
 
 ## Implementation Plan
-1. Rewrite Navbar.tsx: hamburger LEFT, logo center or right of hamburger, left-side slide drawer, add search icon (magnifier, opens search overlay or navigates to /shop with query), add email capture icon between search and cart
-2. Create EmailCaptureModal component -- stores emails in localStorage key 'th_subscribers'
-3. Add Contact Us modal triggered from menu item
-4. Add Help Center modal triggered from menu item -- 8 clickable cards, each expands to show full content
-5. Add Track Order modal -- queries localStorage orders by orderId + email/phone match
-6. Update AdminPage: add 'subscribers' to Section type and NAV_ITEMS, add renderSubscribers() section
+1. Generate Motoko backend with all types and CRUD functions
+2. Update frontend context and all pages to use backend bindings instead of localStorage
+3. Add CSV bulk import UI in Admin > Products section
+4. Add GA purchase event on order confirmation
+5. Fix image lazy loading on homepage product cards and category images
+6. Ensure freeShippingThreshold from settings is enforced in checkout fee calculation

@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import SocialProofNotification from "@/components/SocialProofNotification";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/context/CartContext";
+import { StoreProvider } from "@/context/StoreContext";
 import AboutPage from "@/pages/AboutPage";
 import AdminPage from "@/pages/AdminPage";
 import CartPage from "@/pages/CartPage";
@@ -75,7 +76,6 @@ function WhatsAppButton() {
   );
 }
 
-// Root: just renders Outlet + global Toaster
 const rootRoute = createRootRoute({
   component: () => (
     <>
@@ -85,7 +85,6 @@ const rootRoute = createRootRoute({
   ),
 });
 
-// Store layout: AnnouncementBar + Navbar + content + Footer + WhatsApp + popups
 const storeLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: "_store",
@@ -169,7 +168,6 @@ const aboutRoute = createRoute({
   component: AboutPage,
 });
 
-// Admin route: directly under root (no store Navbar/Footer)
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admin",
@@ -203,9 +201,11 @@ declare module "@tanstack/react-router" {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        <RouterProvider router={router} />
-      </CartProvider>
+      <StoreProvider>
+        <CartProvider>
+          <RouterProvider router={router} />
+        </CartProvider>
+      </StoreProvider>
     </QueryClientProvider>
   );
 }

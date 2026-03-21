@@ -30,6 +30,7 @@ export interface Product {
   fabric?: string;
   rating: number;
   reviewCount: number;
+  soldCount?: number;
   shortDescription?: string;
   deliveryThreshold?: string;
   returnDays?: number;
@@ -63,6 +64,7 @@ export const products: Product[] = [
     colors: ["White", "Blue", "Beige"],
     rating: 4.8,
     reviewCount: 124,
+    soldCount: 843,
   },
   {
     id: "2",
@@ -85,6 +87,7 @@ export const products: Product[] = [
     colors: ["White", "Beige", "Grey"],
     rating: 4.7,
     reviewCount: 89,
+    soldCount: 612,
   },
   {
     id: "3",
@@ -109,6 +112,7 @@ export const products: Product[] = [
     colors: ["Pink", "Green", "Blue"],
     rating: 4.9,
     reviewCount: 215,
+    soldCount: 1240,
   },
   {
     id: "4",
@@ -130,6 +134,7 @@ export const products: Product[] = [
     colors: ["Black", "Beige", "Grey"],
     rating: 4.5,
     reviewCount: 67,
+    soldCount: 380,
   },
   {
     id: "5",
@@ -152,6 +157,7 @@ export const products: Product[] = [
     colors: ["Blue", "White", "Green"],
     rating: 4.6,
     reviewCount: 88,
+    soldCount: 527,
   },
   {
     id: "6",
@@ -173,6 +179,7 @@ export const products: Product[] = [
     colors: ["White", "Beige", "Grey"],
     rating: 4.4,
     reviewCount: 43,
+    soldCount: 290,
   },
   {
     id: "7",
@@ -195,6 +202,7 @@ export const products: Product[] = [
     colors: ["Pastel Pink", "White", "Pastel Blue"],
     rating: 4.7,
     reviewCount: 56,
+    soldCount: 415,
   },
   {
     id: "8",
@@ -216,6 +224,7 @@ export const products: Product[] = [
     colors: ["Pink", "White", "Beige"],
     rating: 4.3,
     reviewCount: 31,
+    soldCount: 210,
   },
   {
     id: "9",
@@ -238,6 +247,7 @@ export const products: Product[] = [
     colors: ["White", "Pastel Blue", "Pastel Pink"],
     rating: 4.9,
     reviewCount: 178,
+    soldCount: 960,
   },
   {
     id: "10",
@@ -259,6 +269,7 @@ export const products: Product[] = [
     colors: ["White", "Beige", "Grey"],
     rating: 4.5,
     reviewCount: 62,
+    soldCount: 340,
   },
   {
     id: "11",
@@ -281,6 +292,7 @@ export const products: Product[] = [
     colors: ["Beige", "White", "Grey"],
     rating: 4.6,
     reviewCount: 95,
+    soldCount: 480,
   },
   {
     id: "12",
@@ -302,5 +314,6 @@ export const products: Product[] = [
     colors: ["Black", "Beige", "Brown"],
     rating: 4.4,
     reviewCount: 47,
+    soldCount: 265,
   },
 ];

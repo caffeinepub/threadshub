@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { getSettings } from "@/utils/settingsStorage";
+import { useStore } from "@/context/StoreContext";
 import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 export default function ExitIntentPopup() {
   const [visible, setVisible] = useState(false);
   const navigate = useNavigate();
-  const settings = getSettings();
+  const { settings } = useStore();
   const popupCode = settings.popupCode || "SUMMER26";
 
   useEffect(() => {
@@ -15,7 +15,6 @@ export default function ExitIntentPopup() {
 
     let lastScrollY = window.scrollY;
 
-    // 10-second timer trigger
     const timer = setTimeout(() => {
       if (!sessionStorage.getItem("exitPopupShown")) {
         setVisible(true);
@@ -23,7 +22,6 @@ export default function ExitIntentPopup() {
       }
     }, 10000);
 
-    // Desktop: mouse leaves viewport at top
     const handleMouseLeave = (e: MouseEvent) => {
       if (e.clientY <= 0) {
         setVisible(true);
@@ -32,7 +30,6 @@ export default function ExitIntentPopup() {
       }
     };
 
-    // Mobile: fast upward scroll
     const handleScroll = () => {
       const currentY = window.scrollY;
       const delta = lastScrollY - currentY;
@@ -82,7 +79,6 @@ export default function ExitIntentPopup() {
             transition={{ duration: 0.3, ease: "easeOut" }}
             className="relative bg-card rounded-lg shadow-2xl max-w-sm w-full overflow-hidden"
           >
-            {/* Decorative top strip */}
             <div className="h-1.5 w-full bg-gradient-to-r from-primary via-orange-400 to-primary" />
 
             <button
@@ -107,7 +103,6 @@ export default function ExitIntentPopup() {
                 </p>
               </div>
 
-              {/* Code box */}
               <div className="bg-secondary border border-dashed border-primary/50 rounded-md py-3 px-4">
                 <p className="text-xs text-muted-foreground mb-1 font-sans">
                   Use code at checkout

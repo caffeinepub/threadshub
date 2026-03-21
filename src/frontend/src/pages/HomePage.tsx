@@ -1,10 +1,9 @@
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useStore } from "@/context/StoreContext";
 import type { Category } from "@/data/products";
 import { categories } from "@/data/products";
-import { getProducts } from "@/utils/productStorage";
-import { getSettings } from "@/utils/settingsStorage";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -29,75 +28,82 @@ const reviews = [
     city: "Lahore",
     rating: 5,
     text: "Quality is amazing! The fabric is so soft and the stitching is perfect. Delivery was within 3 days. Highly recommend ThreadsHub!",
-    product: "Floral Blouse",
-    avatar: "AK",
+    product: "Embroidered Lawn Suit",
+    avatar:
+      "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=100&h=100&fit=crop&crop=face",
   },
   {
     name: "Ahmed R.",
     city: "Karachi",
     rating: 5,
-    text: "Ordered the Classic Oxford shirt. Fits perfectly and looks very professional. Will definitely order again. Great value for money!",
-    product: "Classic White Oxford",
-    avatar: "AR",
+    text: "Ordered the Embroidered Kurta. Fits perfectly and looks very professional. Will definitely order again. Great value for money!",
+    product: "Men Embroidered Kurta",
+    avatar:
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
   },
   {
     name: "Sara M.",
     city: "Islamabad",
     rating: 4,
     text: "Bought kids clothes for my children. Excellent quality, durable, and the colors are vibrant. Kids love it!",
-    product: "Boys Polo Shirt",
-    avatar: "SM",
+    product: "Boys Kurta Shalwar Set",
+    avatar:
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face",
   },
   {
     name: "Usman T.",
     city: "Faisalabad",
     rating: 5,
-    text: "COD option is very convenient. Received the package well-packed. The Slim Fit Denim is exactly as shown. Perfect fit!",
-    product: "Slim Fit Denim",
-    avatar: "UT",
+    text: "COD option is very convenient. Received the package well-packed. The kurta is exactly as shown. Perfect fit!",
+    product: "Men Lawn Embroidered Kurta",
+    avatar:
+      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face",
   },
 ];
 
 const influencers = [
   {
-    name: "Zara Malik",
-    handle: "@zara.style",
-    followers: "125K",
+    name: "Hina Altaf",
+    handle: "@hina.altaf.official",
+    instagramUrl: "https://instagram.com/hina.altaf.official",
+    followers: "340K",
     quote:
-      "ThreadsHub has the most comfortable fabrics I've worn. The quality is on par with international brands but at local prices!",
-    category: "Fashion Blogger",
-    img: "https://picsum.photos/seed/inf1/120/120",
+      "ThreadsHub ka fabric real mein bohat soft hai. Main apni audience ko yehi recommend karti hoon for everyday Pakistani wear!",
+    category: "Fashion & Lifestyle",
+    img: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=200&h=200&fit=crop&crop=face",
   },
   {
-    name: "Ali Hassan",
-    handle: "@ali.fits",
-    followers: "89K",
+    name: "Bilal Saeed",
+    handle: "@bilalsaeed.style",
+    instagramUrl: "https://instagram.com/bilalsaeed.style",
+    followers: "128K",
     quote:
-      "My followers love when I feature ThreadsHub outfits. Affordable, stylish, and ships fast across Pakistan.",
-    category: "Lifestyle Creator",
-    img: "https://picsum.photos/seed/inf2/120/120",
+      "Yahan se kurtas order kiye — quality itni achi hai ke doston ne pucha kahan se liya. Fast delivery bhi!",
+    category: "Men's Fashion Creator",
+    img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=face",
   },
   {
-    name: "Sana Pervaiz",
-    handle: "@sana.ootd",
-    followers: "210K",
+    name: "Maham Noor",
+    handle: "@maham.noor.pk",
+    instagramUrl: "https://instagram.com/maham.noor.pk",
+    followers: "215K",
     quote:
-      "Perfect for everyday looks! I love the kids' collection especially — my daughters are obsessed with the ruffle blouses.",
-    category: "Mom & Family Blogger",
-    img: "https://picsum.photos/seed/inf3/120/120",
+      "Bachon ke kapre isi se mangwati hoon. Embroidered frocks itni pyari hain ke every mama will love them!",
+    category: "Mom & Parenting Blogger",
+    img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=face",
   },
 ];
 
 const instagramPosts = [
-  "https://picsum.photos/seed/ig1/300/300",
-  "https://picsum.photos/seed/ig2/300/300",
-  "https://picsum.photos/seed/ig3/300/300",
-  "https://picsum.photos/seed/ig4/300/300",
-  "https://picsum.photos/seed/ig5/300/300",
-  "https://picsum.photos/seed/ig6/300/300",
-  "https://picsum.photos/seed/ig7/300/300",
-  "https://picsum.photos/seed/ig8/300/300",
-  "https://picsum.photos/seed/ig9/300/300",
+  "/assets/generated/ig-post-1.dim_400x400.jpg",
+  "/assets/generated/ig-post-2.dim_400x400.jpg",
+  "/assets/generated/ig-post-3.dim_400x400.jpg",
+  "/assets/generated/ig-post-4.dim_400x400.jpg",
+  "/assets/generated/ig-post-5.dim_400x400.jpg",
+  "/assets/generated/ig-post-6.dim_400x400.jpg",
+  "/assets/generated/ig-post-7.dim_400x400.jpg",
+  "/assets/generated/ig-post-8.dim_400x400.jpg",
+  "/assets/generated/ig-post-9.dim_400x400.jpg",
 ];
 
 const trustBadges = [
@@ -107,16 +113,46 @@ const trustBadges = [
   { icon: ShieldCheck, label: "Secure Checkout", desc: "100% safe & trusted" },
 ];
 
-const categoryItems: { cat: Category; emoji: string; color: string }[] = [
-  { cat: "Men", emoji: "👔", color: "bg-slate-800" },
-  { cat: "Women", emoji: "👗", color: "bg-rose-700" },
-  { cat: "Boys", emoji: "👫", color: "bg-blue-700" },
-  { cat: "Girls", emoji: "👧", color: "bg-pink-600" },
-  { cat: "Baby", emoji: "👶", color: "bg-amber-600" },
+const categoryItems: {
+  cat: Category;
+  label: string;
+  image: string;
+  color: string;
+}[] = [
+  {
+    cat: "Men",
+    label: "Streetwear Collection",
+    image: "/assets/generated/category-men.dim_400x500.jpg",
+    color: "bg-slate-800",
+  },
+  {
+    cat: "Women",
+    label: "Elegant Styles",
+    image: "/assets/generated/category-women.dim_400x500.jpg",
+    color: "bg-rose-700",
+  },
+  {
+    cat: "Boys",
+    label: "Comfort Wear",
+    image: "/assets/generated/category-boys.dim_400x500.jpg",
+    color: "bg-blue-700",
+  },
+  {
+    cat: "Girls",
+    label: "Trendy Picks",
+    image: "/assets/generated/category-girls.dim_400x500.jpg",
+    color: "bg-pink-600",
+  },
+  {
+    cat: "Baby",
+    label: "Soft & Safe",
+    image: "/assets/generated/category-baby.dim_400x500.jpg",
+    color: "bg-amber-600",
+  },
 ];
 
 export default function HomePage() {
-  const products = getProducts();
+  const { products, settings } = useStore();
   const featured = products.filter((p) => p.featured);
   const newArrivals = products.filter((p) => p.newArrival);
   const bestSellers = products.filter((p) => p.isBestSeller);
@@ -145,7 +181,7 @@ export default function HomePage() {
       <section className="relative overflow-hidden bg-foreground">
         <img
           src={
-            getSettings().heroImage ||
+            settings.heroImage ||
             "/assets/generated/hero-streetwear.dim_1400x600.jpg"
           }
           alt="ThreadsHub 2026 Streetwear Collection"
@@ -154,7 +190,6 @@ export default function HomePage() {
           fetchPriority="high"
           decoding="async"
         />
-        {/* Gradient overlay — dark on left fading to transparent on right */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/10" />
         <div className="absolute inset-0 flex flex-col items-start justify-center px-4 sm:px-16 lg:px-24 z-10">
           <motion.div
@@ -276,7 +311,7 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* ─── Categories ───────────────────────────────────────── */}
+      {/* ─── Categories (Premium with lifestyle images) ────────── */}
       <section
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 border-t border-border"
         data-ocid="categories.section"
@@ -289,35 +324,41 @@ export default function HomePage() {
             Shop by Category
           </h2>
         </div>
-        {/* Mobile: 3-col grid so all 5 fit naturally (last row has 2 centered) */}
-        <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-          {categoryItems.map(({ cat, emoji, color }, i) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+          {categoryItems.map(({ cat, label, image }, i) => (
             <motion.div
               key={cat}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08 }}
-              className={i === 3 ? "col-start-1 sm:col-start-auto" : ""}
+              className={i === 4 ? "col-span-2 sm:col-span-1" : ""}
             >
               <Link
                 to="/shop"
                 search={{ category: cat }}
                 data-ocid={`categories.${cat.toLowerCase()}.link`}
-                className="block"
+                className="block group"
               >
-                <div
-                  className={`${color} text-white rounded-sm p-3 sm:p-6 text-center hover:opacity-90 transition-opacity cursor-pointer`}
-                >
-                  <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">
-                    {emoji}
+                <div className="relative rounded-sm overflow-hidden aspect-[4/5] hover:shadow-elevated transition-shadow cursor-pointer">
+                  <img
+                    src={image}
+                    alt={label}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  {/* Dark gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                  {/* Text at bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
+                    <p className="font-display font-bold text-white text-sm sm:text-base leading-tight">
+                      {label}
+                    </p>
+                    <p className="font-sans text-xs text-white/80 mt-0.5 uppercase tracking-widest">
+                      Shop Now →
+                    </p>
                   </div>
-                  <p className="font-display font-bold text-sm sm:text-lg">
-                    {cat}
-                  </p>
-                  <p className="font-sans text-xs opacity-80 mt-0.5 sm:mt-1 uppercase tracking-widest hidden sm:block">
-                    Shop Now
-                  </p>
                 </div>
               </Link>
             </motion.div>
@@ -369,10 +410,7 @@ export default function HomePage() {
           </div>
 
           {filteredFeatured.length === 0 ? (
-            <div
-              className="text-center py-16 text-muted-foreground"
-              data-ocid="shop.empty_state"
-            >
+            <div className="text-center py-16 text-muted-foreground">
               <Sparkles className="h-8 w-8 mx-auto mb-3 opacity-40" />
               <p className="font-sans">
                 No featured items in this category yet.
@@ -412,10 +450,7 @@ export default function HomePage() {
           </Link>
         </div>
         {newArrivals.length === 0 ? (
-          <div
-            className="text-center py-16 text-muted-foreground"
-            data-ocid="newarrivals.empty_state"
-          >
+          <div className="text-center py-16 text-muted-foreground">
             <Zap className="h-8 w-8 mx-auto mb-3 opacity-40" />
             <p className="font-sans">New arrivals coming soon!</p>
           </div>
@@ -501,7 +536,7 @@ export default function HomePage() {
             >
               <img
                 src={src}
-                alt={`Instagram post ${i + 1}`}
+                alt={`ThreadsHub style ${i + 1}`}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 loading="lazy"
                 decoding="async"
@@ -530,7 +565,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── Customer Reviews ─────────────────────────────────── */}
+      {/* ─── Customer Reviews (Testimonials) ──────────────────── */}
       <section
         className="bg-secondary/30 py-8 sm:py-14 px-4"
         data-ocid="reviews.section"
@@ -544,7 +579,7 @@ export default function HomePage() {
               What Customers Say
             </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {reviews.map((r, i) => (
               <motion.div
                 key={r.name}
@@ -552,7 +587,13 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-card p-6 rounded-sm shadow-card"
+                whileHover={{
+                  scale: 1.02,
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.10)",
+                }}
+                className={`p-6 rounded-xl shadow-card ${
+                  i % 2 === 0 ? "bg-white" : "bg-[#f8f5f2]"
+                }`}
                 data-ocid={`reviews.item.${i + 1}`}
               >
                 <div className="flex gap-0.5 mb-3">
@@ -571,9 +612,13 @@ export default function HomePage() {
                   "{r.text}"
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
-                    {r.avatar}
-                  </div>
+                  <img
+                    src={r.avatar}
+                    alt={r.name}
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-primary/20"
+                    loading="lazy"
+                    decoding="async"
+                  />
                   <div>
                     <p className="font-semibold text-sm text-foreground">
                       {r.name}
@@ -613,21 +658,31 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="bg-card p-6 rounded-sm shadow-card text-center"
+              whileHover={{
+                scale: 1.03,
+                boxShadow:
+                  "0 0 0 4px rgba(139,58,47,0.15), 0 8px 32px rgba(0,0,0,0.12)",
+              }}
+              className="bg-card p-6 rounded-xl shadow-card text-center"
               data-ocid={`influencers.item.${i + 1}`}
             >
               <img
                 src={inf.img}
                 alt={inf.name}
-                className="w-16 h-16 rounded-full object-cover mx-auto mb-4 border-2 border-primary/20"
+                className="w-20 h-20 rounded-full object-cover mx-auto mb-4 border-4 border-primary/30"
                 loading="lazy"
                 decoding="async"
               />
-              <p className="font-display font-bold text-lg">{inf.name}</p>
-              <p className="text-primary text-xs font-semibold mb-1">
+              <p className="font-display font-bold text-xl">{inf.name}</p>
+              <a
+                href={inf.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary text-sm font-semibold hover:underline"
+              >
                 {inf.handle}
-              </p>
-              <p className="text-xs text-muted-foreground mb-3">
+              </a>
+              <p className="text-xs text-muted-foreground mt-1 mb-3">
                 {inf.followers} followers • {inf.category}
               </p>
               <p className="font-sans text-sm text-muted-foreground italic leading-relaxed">
@@ -641,6 +696,19 @@ export default function HomePage() {
                   />
                 ))}
               </div>
+              <a
+                href={inf.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4 w-full text-xs font-semibold gap-1 hover:bg-primary hover:text-white transition-colors"
+                >
+                  <Instagram className="h-3 w-3" /> View Profile
+                </Button>
+              </a>
             </motion.div>
           ))}
         </div>
@@ -665,12 +733,12 @@ export default function HomePage() {
               </span>
             </div>
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-white mb-3">
-              Get <span className="text-green-300">10% OFF</span> on Your First
-              Order!
+              Unlock <span className="text-green-300">10% OFF</span> Instantly
+              🎁
             </h2>
             <p className="font-sans text-white/70 mb-8 text-base">
-              Enter your WhatsApp number and we'll send you an exclusive
-              discount code plus the latest deals.
+              Enter your WhatsApp number and get exclusive deals + priority
+              offers
             </p>
             {submitted ? (
               <motion.div
@@ -696,20 +764,21 @@ export default function HomePage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   data-ocid="leadcapture.input"
-                  className="flex-1 rounded-sm border-green-600 bg-green-800/50 text-white placeholder:text-green-400 focus:border-green-400"
+                  className="flex-1 border-green-600 bg-green-800/50 text-white placeholder:text-green-400 focus:border-green-400"
+                  style={{ borderRadius: "30px" }}
                   required
                 />
                 <Button
                   type="submit"
                   data-ocid="leadcapture.submit_button"
-                  className="bg-green-400 hover:bg-green-300 text-green-900 font-bold uppercase tracking-wider text-sm px-6 rounded-sm gap-2 whitespace-nowrap"
+                  className="bg-green-400 hover:bg-green-300 text-green-900 font-bold uppercase tracking-wider text-sm px-6 rounded-full gap-2 whitespace-nowrap shadow-lg hover:shadow-xl transition-shadow"
                 >
-                  <MessageCircle className="h-4 w-4" /> Get Discount
+                  <MessageCircle className="h-4 w-4" /> Get My Discount Now
                 </Button>
               </form>
             )}
-            <p className="font-sans text-xs text-green-400 mt-4">
-              Only deals and offers — no spam ever.
+            <p className="font-sans text-xs text-green-300 mt-3 flex items-center justify-center gap-1">
+              <ShieldCheck className="h-3 w-3" /> No spam. Only premium deals.
             </p>
           </motion.div>
         </div>

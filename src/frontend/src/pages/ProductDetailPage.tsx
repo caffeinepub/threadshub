@@ -66,36 +66,89 @@ const mockReviews = [
   {
     name: "Amna S.",
     city: "Karachi",
+    product: "Embroidered Lawn Suit",
     rating: 5,
     date: "March 10, 2026",
     text: "Absolutely love the quality! True to size and the fabric is premium. Received in just 3 days.",
     avatar: "AS",
+    avatarImg: "/assets/generated/avatar-amna.dim_80x80.jpg",
   },
   {
     name: "Bilal K.",
     city: "Lahore",
+    product: "Men Embroidered Kurta",
     rating: 5,
     date: "March 8, 2026",
     text: "Exactly as described. Perfect stitching, great color. Will definitely order again!",
     avatar: "BK",
+    avatarImg: "/assets/generated/avatar-bilal.dim_80x80.jpg",
   },
   {
     name: "Fatima R.",
     city: "Islamabad",
+    product: "Ladies Embroidered Suit",
     rating: 4,
     date: "February 28, 2026",
     text: "Good quality product. Size chart is accurate. Delivery was on time. Happy with the purchase.",
     avatar: "FR",
+    avatarImg: "/assets/generated/avatar-fatima.dim_80x80.jpg",
   },
   {
     name: "Hasan M.",
     city: "Faisalabad",
+    product: "Men Embroidered Kurta",
     rating: 5,
     date: "February 20, 2026",
     text: "Best value for money in Pakistan. Highly recommend to everyone looking for quality clothing.",
     avatar: "HM",
+    avatarImg: "/assets/generated/avatar-hasan.dim_80x80.jpg",
   },
 ];
+
+// ─── Delivery Countdown ───────────────────────────────────────────────────────
+function DeliveryCountdown() {
+  const [timeLeft, setTimeLeft] = useState({
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
+  useEffect(() => {
+    const calcTime = () => {
+      const now = new Date();
+      const cutoff = new Date(now);
+      cutoff.setHours(14, 0, 0, 0);
+      if (now >= cutoff) cutoff.setDate(cutoff.getDate() + 1);
+      const diff = cutoff.getTime() - now.getTime();
+      const hours = Math.floor(diff / 3600000);
+      const minutes = Math.floor((diff % 3600000) / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+      setTimeLeft({ hours, minutes, seconds });
+    };
+    calcTime();
+    const interval = setInterval(calcTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  return (
+    <div className="flex items-center gap-2 mb-4 px-3 py-2.5 rounded-lg bg-green-50 border border-green-200">
+      <span className="text-green-700 text-lg">🚚</span>
+      <div>
+        <p className="text-xs font-bold text-green-800">
+          Order within{" "}
+          <span className="text-green-600 font-mono">
+            {pad(timeLeft.hours)}:{pad(timeLeft.minutes)}:
+            {pad(timeLeft.seconds)}
+          </span>{" "}
+          to get delivery by tomorrow
+        </p>
+        <p className="text-xs text-green-600">Express delivery available</p>
+      </div>
+    </div>
+  );
+}
 
 // ─── Image Lightbox ───────────────────────────────────────────────────────────
 function ImageLightbox({
@@ -782,6 +835,9 @@ export default function ProductDetailPage() {
           )}
         </div>
 
+        {/* Delivery Countdown */}
+        <DeliveryCountdown />
+
         {/* Stock + Only X pcs left */}
         {outOfStock ? (
           <div className="mb-3">
@@ -837,7 +893,7 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Qty + Add to Cart — same row */}
-        <div ref={ctaRef} className="flex items-center gap-3 mb-5">
+        <div ref={ctaRef} className="flex items-center gap-3 mb-4">
           {/* Qty control */}
           <div className="flex items-center border-2 border-border rounded-lg overflow-hidden flex-shrink-0">
             <button
@@ -865,12 +921,30 @@ export default function ProductDetailPage() {
             onClick={handleAddToCart}
             disabled={outOfStock || added}
             data-ocid="product.add_to_cart_button"
-            className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-foreground text-background font-bold text-sm uppercase tracking-wider rounded-lg hover:opacity-85 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+            className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-foreground text-background font-bold text-sm uppercase tracking-wider rounded-lg hover:opacity-85 hover:scale-[1.01] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(139,58,47,0.4)] hover:shadow-[0_0_25px_rgba(139,58,47,0.6)]"
           >
             <ShoppingCart className="h-4 w-4" />
             {added ? "Added! ✓" : outOfStock ? "Out of Stock" : "Add to Cart"}
           </button>
         </div>
+
+        {/* WhatsApp Quick Order */}
+        <a
+          href={`https://wa.me/923174933882?text=${encodeURIComponent(`Hi! I want to order:\n\n*${product.name}*\nSize: ${selectedSize || "Please select"}\nColor: ${selectedColor || "Please select"}\nQuantity: ${qty}\n\nPlease confirm availability.`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-ocid="product.whatsapp_button"
+          className="flex items-center justify-center gap-2 w-full py-3 px-4 mb-5 bg-[#25D366] hover:bg-[#20bc5a] text-white font-bold text-sm rounded-lg transition-all hover:scale-[1.02] active:scale-95 shadow-md"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="w-5 h-5 fill-current"
+            aria-hidden="true"
+          >
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+          </svg>
+          Order on WhatsApp
+        </a>
 
         <div className="border-t border-border/40 my-5" />
 
@@ -950,19 +1024,23 @@ export default function ProductDetailPage() {
                         >
                           <td className="py-2 pr-4 font-medium">{row.size}</td>
                           <td className="py-2 pr-4 text-muted-foreground">
-                            {row.chest}"
+                            {row.chest}&quot;
                           </td>
                           <td className="py-2 pr-4 text-muted-foreground">
-                            {row.waist}"
+                            {row.waist}&quot;
                           </td>
                           <td className="py-2 text-muted-foreground">
-                            {row.hips}"
+                            {row.hips}&quot;
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+                <p className="text-xs text-muted-foreground mt-3 italic">
+                  💡 Tip: If between sizes, size up for a comfortable fit. For
+                  kurtas, measure chest + add 2 inches ease.
+                </p>
               </DialogContent>
             </Dialog>
           </div>
@@ -1079,12 +1157,15 @@ export default function ProductDetailPage() {
           ))}
         </div>
 
-        {/* ── Recommended For You ──────────────────────────────────────────── */}
+        {/* ── Complete Your Look ──────────────────────────────────────────── */}
         {relatedProducts.length > 0 && (
           <section className="mb-8" data-ocid="product.recommended.section">
-            <h2 className="font-display text-lg font-bold mb-4">
-              Recommended For You
+            <h2 className="font-display text-lg font-bold mb-1">
+              Complete Your Look
             </h2>
+            <div className="inline-flex items-center gap-1.5 bg-orange-100 border border-orange-300 text-orange-800 text-xs font-bold px-3 py-1 rounded-full mb-3">
+              🛍️ Buy 2 &amp; Save Rs. 300
+            </div>
             <div className="grid grid-cols-2 gap-3">
               {relatedProducts.slice(0, 4).map((p, i) => (
                 <ProductCard key={p.id} product={p} index={i} />
@@ -1092,6 +1173,59 @@ export default function ProductDetailPage() {
             </div>
           </section>
         )}
+
+        {/* ── UGC Section ─────────────────────────────────────────────────── */}
+        <section className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <h2 className="font-display text-lg font-bold">
+              Real Customers, Real Style
+            </h2>
+            <span className="text-xs bg-pink-100 text-pink-700 font-semibold px-2 py-0.5 rounded-full">
+              ❤️ Verified
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              {
+                img: "/assets/generated/ugc-customer-1.dim_400x500.jpg",
+                name: "Amna S.",
+                city: "Karachi",
+              },
+              {
+                img: "/assets/generated/ugc-customer-2.dim_400x500.jpg",
+                name: "Bilal K.",
+                city: "Lahore",
+              },
+              {
+                img: "/assets/generated/ugc-customer-3.dim_400x500.jpg",
+                name: "Fatima R.",
+                city: "Islamabad",
+              },
+              {
+                img: "/assets/generated/ugc-customer-4.dim_400x500.jpg",
+                name: "Sara M.",
+                city: "Peshawar",
+              },
+            ].map((item) => (
+              <div
+                key={item.name}
+                className="relative overflow-hidden rounded-xl group cursor-pointer"
+              >
+                <img
+                  src={item.img}
+                  alt={`${item.name} wearing ThreadsHub`}
+                  className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute bottom-2 left-2 right-2">
+                  <p className="text-white text-xs font-bold">{item.name}</p>
+                  <p className="text-white/80 text-xs">{item.city}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* ── Customer Reviews ─────────────────────────────────────────────── */}
         <section data-ocid="product.reviews.section">
@@ -1128,6 +1262,7 @@ export default function ProductDetailPage() {
                 .toUpperCase()
                 .slice(0, 2);
               const isMock = "avatar" in r;
+              const mockR = r as (typeof mockReviews)[0];
               return (
                 <div
                   // biome-ignore lint/suspicious/noArrayIndexKey: stable review index
@@ -1151,19 +1286,25 @@ export default function ProductDetailPage() {
                     &ldquo;{r.text}&rdquo;
                   </p>
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">
-                      {isMock
-                        ? (r as (typeof mockReviews)[0]).avatar
-                        : initials}
-                    </div>
+                    {isMock && mockR.avatarImg ? (
+                      <img
+                        src={mockR.avatarImg}
+                        alt={r.name}
+                        className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-primary/20"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">
+                        {initials}
+                      </div>
+                    )}
                     <div>
                       <p className="font-semibold text-xs">{r.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {isMock
-                          ? `${(r as (typeof mockReviews)[0]).city} · `
-                          : ""}
-                        {r.date}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{r.date}</p>
+                      {isMock && mockR.city && (
+                        <p className="text-xs text-muted-foreground">
+                          {mockR.city} · {mockR.product}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

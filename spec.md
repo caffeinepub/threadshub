@@ -1,44 +1,48 @@
-# ThreadsHub
+# ThreadsHub Product Page Optimization
 
 ## Current State
-- Entire app runs on localStorage only — backend (main.mo) is empty actor {}
-- Admin changes only persist in the browser where they are made — no cross-device sync
-- No bulk product upload
-- No GA purchase event tracking
-- Images loaded from external URLs (slow)
-- Shipping rules exist in StoreSettings but freeShippingThreshold may not be fully wired
-- No abandoned cart reminder UI
+ProductDetailPage.tsx has a fully functional product page with:
+- Full-bleed hero image with transparent navbar
+- Image lightbox with zoom, fullscreen, pinch-to-zoom, autoplay
+- Sticky Add to Cart bar
+- Viewing count (dynamic, per-product)
+- Only X left urgency (with pulse)
+- Star rating display (compact)
+- Qty + Add to Cart in same row
+- Color/size selectors
+- Size Chart modal (dialog)
+- Description + key highlights
+- Delivery & Return section with COD/Delivery/Returns icons
+- Trust badges
+- "Recommended For You" related products
+- Customer reviews with initials avatars
 
 ## Requested Changes (Diff)
 
 ### Add
-- Motoko backend: persistent storage for Products, Orders, StoreSettings, Discounts, Contacts, EmailSubscribers
-- Backend CRUD: getProducts, addProduct, updateProduct, deleteProduct, bulkImportProducts
-- Backend CRUD: getOrders, addOrder, updateOrderStatus
-- Backend: getSettings, saveSettings
-- Backend: getDiscounts, addDiscount, updateDiscount, deleteDiscount
-- Backend: addContact, getContacts, deleteContact
-- Backend: addSubscriber, getSubscribers, deleteSubscriber
-- Admin panel: CSV bulk product import (upload CSV → parse → bulk save to backend)
-- GA purchase event tracking (send purchase event on order confirmation)
-- Image lazy loading with loading="lazy" on non-critical images
-- Shipping rules: freeShippingThreshold editable in admin Settings and enforced at checkout
+- **WhatsApp Quick Order button** below Add to Cart: "Order on WhatsApp" with auto-fill of product name + quantity
+- **Delivery Countdown timer** below price: "Order within X hrs Y mins to get delivery by tomorrow"
+- **UGC Section** "Real Customers, Real Style" — 2x2 grid of 4 generated lifestyle images with hover zoom
+- **Profile images** on reviews — circular real avatar images (generated) instead of initials
+- **"Complete Your Look" upsell** section with "Buy 2 & Save Rs. 300" badge (replacing "Recommended For You" label only)
+- **Measurement guide hint** in size chart modal
+- **Micro interactions**: glow effect on Add to Cart button, hover scale on WhatsApp button
 
 ### Modify
-- Frontend: all localStorage reads/writes replaced with backend canister calls
-- CartContext: on order placement, save to backend via addOrder
-- AdminPage: all product/order/settings/discounts/contacts/subscribers CRUD via backend
-- CheckoutPage: on order confirm, fire GA purchase event
-- AnnouncementBar: read settings from backend
-- ExitIntentPopup: read popup discount code from backend settings
+- Reviews section: swap initials div with circular `<img>` using generated avatar images
+- "Recommended For You" section title → "Complete Your Look" with "Buy 2 & Save Rs. 300" badge
+- Product description area: add emotional benefit-driven copy fallback for products without custom description
+- Add to Cart button: add subtle box-shadow glow on hover
 
 ### Remove
-- All localStorage usage for products, orders, settings, discounts, contacts, subscribers (keep cart in memory as before)
+- Nothing removed (user explicit: keep all existing features)
 
 ## Implementation Plan
-1. Generate Motoko backend with all types and CRUD functions
-2. Update frontend context and all pages to use backend bindings instead of localStorage
-3. Add CSV bulk import UI in Admin > Products section
-4. Add GA purchase event on order confirmation
-5. Fix image lazy loading on homepage product cards and category images
-6. Ensure freeShippingThreshold from settings is enforced in checkout fee calculation
+1. Add DeliveryCountdown component (calculates hours until next day cutoff)
+2. Add WhatsApp order button below ctaRef div
+3. Update mockReviews to use avatar image paths
+4. Replace initials div in review cards with circular img
+5. Add UGC section "Real Customers, Real Style" between reviews and recommended
+6. Update "Recommended For You" section label to "Complete Your Look" + Rs. 300 bundle badge
+7. Add glow CSS to Add to Cart button via className
+8. No backend changes needed

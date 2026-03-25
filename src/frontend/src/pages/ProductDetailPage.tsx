@@ -133,7 +133,7 @@ function DeliveryCountdown() {
   const pad = (n: number) => String(n).padStart(2, "0");
 
   return (
-    <div className="flex items-center gap-2 mb-4 px-3 py-2.5 rounded-lg bg-green-50 border border-green-200">
+    <div className="flex items-center gap-2 mb-6 px-3 py-2.5 rounded-lg bg-green-50 border border-green-200">
       <span className="text-green-700 text-lg">🚚</span>
       <div>
         <p className="text-xs font-bold text-green-800">
@@ -663,12 +663,11 @@ export default function ProductDetailPage() {
         visible={stickyVisible}
       />
 
-      {/* ── Full-bleed hero image (starts from very top, under transparent navbar) ── */}
+      {/* ── Full-bleed hero image ─────────────────────────────────────── */}
       <div
         className="relative w-full overflow-hidden bg-black"
         style={{ marginTop: "-0px" }}
       >
-        {/* Main image — full width, tall */}
         <button
           type="button"
           className="relative w-full block cursor-zoom-in group"
@@ -686,15 +685,12 @@ export default function ProductDetailPage() {
             style={{ height: "clamp(320px, 75vw, 680px)", maxHeight: "80vh" }}
             loading="eager"
           />
-          {/* Dark gradient overlay at bottom for readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
 
-          {/* Expand hint */}
           <div className="absolute top-20 right-3 bg-black/50 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <Expand className="w-4 h-4" />
           </div>
 
-          {/* Badges */}
           {product.isBestSeller && (
             <div className="absolute top-20 left-3">
               <span className="bg-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow">
@@ -704,7 +700,9 @@ export default function ProductDetailPage() {
           )}
           {hasDiscount && (
             <div
-              className={`absolute ${product.isBestSeller ? "top-28" : "top-20"} left-3`}
+              className={`absolute ${
+                product.isBestSeller ? "top-28" : "top-20"
+              } left-3`}
             >
               <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow">
                 -{discountPct}% OFF
@@ -719,7 +717,6 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          {/* Low stock warning */}
           {isLowStock && (
             <div className="absolute bottom-4 left-3 right-3">
               <div className="bg-red-600/90 backdrop-blur-sm text-white text-xs font-semibold px-3 py-2 rounded-lg text-center shadow">
@@ -728,7 +725,6 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          {/* Left/Right arrows */}
           {allImages.length > 1 && (
             <>
               <button
@@ -757,7 +753,6 @@ export default function ProductDetailPage() {
           )}
         </button>
 
-        {/* Thumbnail strip below main image */}
         {allImages.length > 1 && (
           <div className="flex gap-2 px-4 py-2 overflow-x-auto bg-black/5 border-b border-border/20">
             {allImages.map((img, i) => (
@@ -838,21 +833,21 @@ export default function ProductDetailPage() {
         {/* Delivery Countdown */}
         <DeliveryCountdown />
 
-        {/* Stock + Only X pcs left */}
+        {/* Stock */}
         {outOfStock ? (
-          <div className="mb-3">
+          <div className="mb-6">
             <span className="text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-3 py-1.5 rounded-full">
               Out of Stock
             </span>
           </div>
         ) : isLowStock ? (
-          <div className="mb-3">
+          <div className="mb-6">
             <span className="text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 px-3 py-1.5 rounded-full animate-pulse">
               🔥 Only {stock} pcs left!
             </span>
           </div>
         ) : (
-          <div className="mb-3">
+          <div className="mb-6">
             <span className="text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-full">
               ✓ In Stock
             </span>
@@ -860,7 +855,7 @@ export default function ProductDetailPage() {
         )}
 
         {/* 👁️ Viewing count */}
-        <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 w-fit">
+        <div className="flex items-center gap-2 mb-6 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 w-fit">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
@@ -893,8 +888,7 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Qty + Add to Cart — same row */}
-        <div ref={ctaRef} className="flex items-center gap-3 mb-4">
-          {/* Qty control */}
+        <div ref={ctaRef} className="flex items-center gap-3 mb-6">
           <div className="flex items-center border-2 border-border rounded-lg overflow-hidden flex-shrink-0">
             <button
               type="button"
@@ -915,7 +909,6 @@ export default function ProductDetailPage() {
             </button>
           </div>
 
-          {/* ADD TO CART */}
           <button
             type="button"
             onClick={handleAddToCart}
@@ -934,7 +927,7 @@ export default function ProductDetailPage() {
           target="_blank"
           rel="noopener noreferrer"
           data-ocid="product.whatsapp_button"
-          className="flex items-center justify-center gap-2 w-full py-3 px-4 mb-5 bg-[#25D366] hover:bg-[#20bc5a] text-white font-bold text-sm rounded-lg transition-all hover:scale-[1.02] active:scale-95 shadow-md"
+          className="flex items-center justify-center gap-2 w-full py-3 px-4 mb-6 bg-[#25D366] hover:bg-[#20bc5a] text-white font-bold text-sm rounded-lg transition-all hover:scale-[1.02] active:scale-95 shadow-md"
         >
           <svg
             viewBox="0 0 24 24"
@@ -946,11 +939,11 @@ export default function ProductDetailPage() {
           Order on WhatsApp
         </a>
 
-        <div className="border-t border-border/40 my-5" />
+        <div className="border-t border-border/40 my-6" />
 
         {/* Colors */}
         {product.colors && product.colors.length > 0 && (
-          <div className="mb-5">
+          <div className="mb-6">
             <p className="text-sm font-bold mb-2 text-foreground">
               Color{selectedColor ? `: ${selectedColor}` : ""}
             </p>
@@ -980,7 +973,7 @@ export default function ProductDetailPage() {
         )}
 
         {/* Sizes */}
-        <div className="mb-5">
+        <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-bold text-foreground">Size</p>
             <Dialog>
@@ -1064,7 +1057,7 @@ export default function ProductDetailPage() {
 
         {/* Description */}
         {product.description && (
-          <div className="mb-5">
+          <div className="mb-6">
             <p className="text-sm font-bold text-foreground mb-2">
               Description
             </p>
@@ -1076,7 +1069,7 @@ export default function ProductDetailPage() {
 
         {/* Key highlights */}
         {product.shortDescription && (
-          <ul className="space-y-1.5 mb-5">
+          <ul className="space-y-1.5 mb-6">
             {product.shortDescription
               .split("\n")
               .filter(Boolean)
@@ -1094,7 +1087,7 @@ export default function ProductDetailPage() {
 
         {/* Fabric */}
         {product.fabric && (
-          <div className="bg-secondary/40 rounded-lg p-3 flex items-center gap-2 mb-5 text-sm">
+          <div className="bg-secondary/40 rounded-lg p-3 flex items-center gap-2 mb-6 text-sm">
             <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span>
               <strong>Material:</strong> {product.fabric}
@@ -1102,10 +1095,35 @@ export default function ProductDetailPage() {
           </div>
         )}
 
-        <div className="border-t border-border/40 my-5" />
+        {/* Why Choose This Product */}
+        <div className="mb-6 p-4 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
+          <h3 className="font-display text-base font-bold text-foreground mb-3">
+            ✨ Why Choose This Product
+          </h3>
+          <ul className="space-y-2">
+            {[
+              "Premium fabric quality",
+              "Comfortable all-day wear",
+              "Perfect for occasions",
+              "Durable stitching",
+            ].map((point) => (
+              <li
+                key={point}
+                className="flex items-center gap-2 text-sm text-foreground"
+              >
+                <span className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs flex-shrink-0">
+                  ✓
+                </span>
+                {point}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="border-t border-border/40 my-6" />
 
         {/* Delivery & Return */}
-        <div className="mb-5">
+        <div className="mb-6">
           <p className="text-sm font-bold text-foreground mb-3">
             Delivery &amp; Return
           </p>
@@ -1157,7 +1175,7 @@ export default function ProductDetailPage() {
           ))}
         </div>
 
-        {/* ── Complete Your Look ──────────────────────────────────────────── */}
+        {/* Complete Your Look */}
         {relatedProducts.length > 0 && (
           <section className="mb-8" data-ocid="product.recommended.section">
             <h2 className="font-display text-lg font-bold mb-1">
@@ -1174,7 +1192,7 @@ export default function ProductDetailPage() {
           </section>
         )}
 
-        {/* ── UGC Section ─────────────────────────────────────────────────── */}
+        {/* UGC Section */}
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-4">
             <h2 className="font-display text-lg font-bold">
@@ -1227,7 +1245,7 @@ export default function ProductDetailPage() {
           </div>
         </section>
 
-        {/* ── Customer Reviews ─────────────────────────────────────────────── */}
+        {/* Customer Reviews */}
         <section data-ocid="product.reviews.section">
           <div className="mb-4">
             <h2 className="font-display text-lg font-bold">Customer Reviews</h2>

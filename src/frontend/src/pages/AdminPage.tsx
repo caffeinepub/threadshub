@@ -519,7 +519,7 @@ function ProductsSection() {
       return;
     }
     try {
-      await bs.saveProduct(payload);
+      await bs.saveProduct(payload, !editingId);
       toast.success(editingId ? "Product updated" : "Product added");
       await reload();
       setDialogOpen(false);

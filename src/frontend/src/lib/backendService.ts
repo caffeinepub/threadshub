@@ -1,6 +1,3 @@
-// backend.ts only exposes _initializeAccessControlWithSecret in TS type
-// The actual runtime actor has all methods via ICP actor proxy
-// We use a cast approach to access the full API
 import type {
   Contact as BackendContact,
   Discount as BackendDiscount,
@@ -38,10 +35,7 @@ function toBackendProduct(p: FrontendProduct): BackendProduct {
     description: p.description ?? "",
     shortDescription: p.shortDescription ?? "",
     price: p.price,
-    discountPrice:
-      p.discountPrice != null
-        ? { __kind__: "Some" as const, value: p.discountPrice }
-        : { __kind__: "None" as const },
+    discountPrice: p.discountPrice != null ? [p.discountPrice] : [],
     category: p.category,
     image: p.image,
     image2: p.image2 ?? "",
@@ -55,17 +49,18 @@ function toBackendProduct(p: FrontendProduct): BackendProduct {
     colorImages: Object.entries(p.colorImages ?? {}).map(
       ([k, v]) => [k, v] as [string, string],
     ),
-    stock: p.stock ?? 50,
+    stock: BigInt(p.stock ?? 50),
     fabric: p.fabric ?? "",
     rating: p.rating ?? 4.5,
-    reviewCount: p.reviewCount ?? 0,
-    soldCount: p.soldCount ?? 0,
-    deliveryThreshold:
+    reviewCount: BigInt(p.reviewCount ?? 0),
+    soldCount: BigInt(p.soldCount ?? 0),
+    deliveryThreshold: BigInt(
       Number.parseInt(
         (p.deliveryThreshold ?? "2000").replace(/[^0-9]/g, ""),
         10,
       ) || 2000,
-    returnDays: p.returnDays ?? 7,
+    ),
+    returnDays: BigInt(p.returnDays ?? 7),
     reviews: (p.reviews ?? []).map((r: ProductReview) => ({
       reviewer: r.name,
       rating: r.rating,
@@ -73,20 +68,24 @@ function toBackendProduct(p: FrontendProduct): BackendProduct {
       date: r.date,
     })),
     keyHighlights: (p.shortDescription ?? "").split("\n").filter(Boolean),
-    viewingCount: 0,
+    viewingCount: BigInt(0),
     trendingBadge: false,
   };
 }
 
 function fromBackendProduct(p: BackendProduct): FrontendProduct {
+  const discountPrice =
+    Array.isArray(p.discountPrice) && p.discountPrice.length > 0
+      ? p.discountPrice[0]
+      : undefined;
   return {
     id: p.id,
     name: p.name,
     description: p.description,
-    shortDescription: p.shortDescription || p.keyHighlights?.join("\n") || "",
+    shortDescription:
+      p.shortDescription || (p.keyHighlights ?? []).join("\n") || "",
     price: p.price,
-    discountPrice:
-      p.discountPrice.__kind__ === "Some" ? p.discountPrice.value : undefined,
+    discountPrice,
     category: p.category as LocalProduct["category"],
     type: "Shirt" as const,
     image: p.image,
@@ -99,15 +98,15 @@ function fromBackendProduct(p: BackendProduct): FrontendProduct {
     isBestSeller: p.isBestSeller,
     sizes: p.sizes,
     colors: p.colors,
-    stock: p.stock,
+    stock: Number(p.stock),
     fabric: p.fabric || undefined,
     rating: p.rating,
-    reviewCount: p.reviewCount,
-    soldCount: p.soldCount,
+    reviewCount: Number(p.reviewCount),
+    soldCount: Number(p.soldCount),
     deliveryThreshold: p.deliveryThreshold
-      ? `Above Rs. ${p.deliveryThreshold.toLocaleString()}`
+      ? `Above Rs. ${Number(p.deliveryThreshold).toLocaleString()}`
       : "Above Rs. 2,000",
-    returnDays: p.returnDays,
+    returnDays: Number(p.returnDays),
     reviews: (p.reviews ?? []).map((r: BackendReview) => ({
       name: r.reviewer,
       rating: r.rating,
@@ -129,14 +128,23 @@ export async function fetchProducts(): Promise<FrontendProduct[]> {
   }
 }
 
-export async function saveProduct(p: FrontendProduct): Promise<string> {
+/**
+ * Save product to backend.
+ * @param p - product data
+ * @param isNew - true when adding a brand new product, false when editing existing
+ */
+export async function saveProduct(
+  p: FrontendProduct,
+  isNew = false,
+): Promise<string> {
   const actor = await getActor();
   const bp = toBackendProduct(p);
-  if (p.id) {
-    await actor.updateProduct(bp);
-    return p.id;
+  if (isNew) {
+    return actor.addProduct(bp);
   }
-  return actor.addProduct(bp);
+  const ok = await actor.updateProduct(bp);
+  if (!ok) throw new Error("Product update failed — product not found");
+  return p.id;
 }
 
 export async function removeProduct(id: string): Promise<void> {
@@ -148,7 +156,8 @@ export async function bulkImportProducts(
   products: FrontendProduct[],
 ): Promise<number> {
   const actor = await getActor();
-  return actor.bulkImportProducts(products.map(toBackendProduct));
+  const count = await actor.bulkImportProducts(products.map(toBackendProduct));
+  return Number(count);
 }
 
 export async function seedInitialProducts(
@@ -163,12 +172,44 @@ export async function seedInitialProducts(
 }
 
 // ─── Order operations ──────────────────────────────────────────────────────────
-export type FrontendOrder = BackendOrder;
+export type FrontendOrder = {
+  id: string;
+  date: string;
+  customerName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  paymentMethod: string;
+  items: { productName: string; size: string; qty: number; price: number }[];
+  productTotal: number;
+  shippingFee: number;
+  grandTotal: number;
+  status: string;
+  discountCode: string;
+  discountAmount: number;
+};
+
+function toBackendOrder(o: FrontendOrder): BackendOrder {
+  return {
+    ...o,
+    items: o.items.map((i) => ({ ...i, qty: BigInt(i.qty) })),
+  };
+}
+
+function fromBackendOrder(o: BackendOrder): FrontendOrder {
+  return {
+    ...o,
+    items: (o.items ?? []).map((i: any) => ({ ...i, qty: Number(i.qty) })),
+  };
+}
 
 export async function fetchOrders(): Promise<FrontendOrder[]> {
   try {
     const actor = await getActor();
-    return actor.getOrders();
+    const orders = await actor.getOrders();
+    return orders.map(fromBackendOrder);
   } catch (err) {
     console.error("fetchOrders failed:", err);
     return [];
@@ -177,7 +218,7 @@ export async function fetchOrders(): Promise<FrontendOrder[]> {
 
 export async function saveOrder(o: FrontendOrder): Promise<string> {
   const actor = await getActor();
-  return actor.addOrder(o);
+  return actor.addOrder(toBackendOrder(o));
 }
 
 export async function changeOrderStatus(
@@ -221,12 +262,26 @@ export async function updateSettings(s: FrontendSettings): Promise<void> {
 }
 
 // ─── Discounts ─────────────────────────────────────────────────────────────────
-export type FrontendDiscount = BackendDiscount;
+export type FrontendDiscount = {
+  code: string;
+  percent: number;
+  active: boolean;
+  usageCount: number;
+};
+
+function fromBackendDiscount(d: BackendDiscount): FrontendDiscount {
+  return { ...d, usageCount: Number(d.usageCount) };
+}
+
+function toBackendDiscount(d: FrontendDiscount): BackendDiscount {
+  return { ...d, usageCount: BigInt(d.usageCount) };
+}
 
 export async function fetchDiscounts(): Promise<FrontendDiscount[]> {
   try {
     const actor = await getActor();
-    return actor.getDiscounts();
+    const list = await actor.getDiscounts();
+    return list.map(fromBackendDiscount);
   } catch (err) {
     console.error("fetchDiscounts failed:", err);
     return [];
@@ -238,9 +293,9 @@ export async function saveDiscount(d: FrontendDiscount): Promise<void> {
   const existing = await fetchDiscounts();
   const exists = existing.find((x) => x.code === d.code);
   if (exists) {
-    await actor.updateDiscount(d);
+    await actor.updateDiscount(toBackendDiscount(d));
   } else {
-    await actor.addDiscount(d);
+    await actor.addDiscount(toBackendDiscount(d));
   }
 }
 
@@ -252,8 +307,10 @@ export async function removeDiscount(code: string): Promise<void> {
 export async function checkDiscount(code: string): Promise<number | null> {
   try {
     const actor = await getActor();
-    const result = await actor.validateDiscount(code);
-    return result.__kind__ === "Some" ? result.value : null;
+    const result: [] | [number] = await actor.validateDiscount(code);
+    return Array.isArray(result) && result.length > 0
+      ? (result[0] ?? null)
+      : null;
   } catch {
     return null;
   }

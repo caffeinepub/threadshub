@@ -1,4 +1,5 @@
 import type { Principal } from "@icp-sdk/core/principal";
+
 export interface Some<T> {
     __kind__: "Some";
     value: T;
@@ -21,7 +22,7 @@ export interface Product {
     description: string;
     shortDescription: string;
     price: number;
-    discountPrice: Option<number>;
+    discountPrice: [] | [number];
     category: string;
     image: string;
     image2: string;
@@ -33,23 +34,23 @@ export interface Product {
     sizes: string[];
     colors: string[];
     colorImages: Array<[string, string]>;
-    stock: number;
+    stock: bigint;
     fabric: string;
     rating: number;
-    reviewCount: number;
-    soldCount: number;
-    deliveryThreshold: number;
-    returnDays: number;
+    reviewCount: bigint;
+    soldCount: bigint;
+    deliveryThreshold: bigint;
+    returnDays: bigint;
     reviews: Review[];
     keyHighlights: string[];
-    viewingCount: number;
+    viewingCount: bigint;
     trendingBadge: boolean;
 }
 
 export interface OrderItem {
     productName: string;
     size: string;
-    qty: number;
+    qty: bigint;
     price: number;
 }
 
@@ -89,7 +90,7 @@ export interface Discount {
     code: string;
     percent: number;
     active: boolean;
-    usageCount: number;
+    usageCount: bigint;
 }
 
 export interface Contact {
@@ -114,7 +115,7 @@ export interface backendInterface {
     addProduct(product: Product): Promise<string>;
     updateProduct(product: Product): Promise<boolean>;
     deleteProduct(id: string): Promise<boolean>;
-    bulkImportProducts(products: Product[]): Promise<number>;
+    bulkImportProducts(products: Product[]): Promise<bigint>;
     seedProducts(products: Product[]): Promise<void>;
     getOrders(): Promise<Order[]>;
     addOrder(order: Order): Promise<string>;
@@ -125,7 +126,7 @@ export interface backendInterface {
     addDiscount(discount: Discount): Promise<boolean>;
     updateDiscount(discount: Discount): Promise<boolean>;
     deleteDiscount(code: string): Promise<boolean>;
-    validateDiscount(code: string): Promise<Option<number>>;
+    validateDiscount(code: string): Promise<[] | [number]>;
     getContacts(): Promise<Contact[]>;
     addContact(contact: Contact): Promise<string>;
     deleteContact(id: string): Promise<boolean>;

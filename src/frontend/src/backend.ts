@@ -91,10 +91,54 @@ export class ExternalBlob {
 }
 export interface backendInterface {
     _initializeAccessControlWithSecret(secret: string): Promise<void>;
+    getProducts(): Promise<any[]>;
+    addProduct(product: any): Promise<string>;
+    updateProduct(product: any): Promise<boolean>;
+    deleteProduct(id: string): Promise<boolean>;
+    bulkImportProducts(products: any[]): Promise<bigint>;
+    seedProducts(products: any[]): Promise<void>;
+    getOrders(): Promise<any[]>;
+    addOrder(order: any): Promise<string>;
+    updateOrderStatus(id: string, status: string): Promise<boolean>;
+    getSettings(): Promise<any>;
+    saveSettings(settings: any): Promise<boolean>;
+    getDiscounts(): Promise<any[]>;
+    addDiscount(discount: any): Promise<boolean>;
+    updateDiscount(discount: any): Promise<boolean>;
+    deleteDiscount(code: string): Promise<boolean>;
+    validateDiscount(code: string): Promise<[] | [number]>;
+    getContacts(): Promise<any[]>;
+    addContact(contact: any): Promise<string>;
+    deleteContact(id: string): Promise<boolean>;
+    getSubscribers(): Promise<any[]>;
+    addSubscriber(subscriber: any): Promise<string>;
+    deleteSubscriber(id: string): Promise<boolean>;
 }
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(_secret: string): Promise<void> {}
+    async getProducts() { return this.actor.getProducts(); }
+    async addProduct(p: any) { return this.actor.addProduct(p); }
+    async updateProduct(p: any) { return this.actor.updateProduct(p); }
+    async deleteProduct(id: string) { return this.actor.deleteProduct(id); }
+    async bulkImportProducts(ps: any[]) { return this.actor.bulkImportProducts(ps); }
+    async seedProducts(ps: any[]) { return this.actor.seedProducts(ps); }
+    async getOrders() { return this.actor.getOrders(); }
+    async addOrder(o: any) { return this.actor.addOrder(o); }
+    async updateOrderStatus(id: string, status: string) { return this.actor.updateOrderStatus(id, status); }
+    async getSettings() { return this.actor.getSettings(); }
+    async saveSettings(s: any) { return this.actor.saveSettings(s); }
+    async getDiscounts() { return this.actor.getDiscounts(); }
+    async addDiscount(d: any) { return this.actor.addDiscount(d); }
+    async updateDiscount(d: any) { return this.actor.updateDiscount(d); }
+    async deleteDiscount(code: string) { return this.actor.deleteDiscount(code); }
+    async validateDiscount(code: string) { return this.actor.validateDiscount(code); }
+    async getContacts() { return this.actor.getContacts(); }
+    async addContact(c: any) { return this.actor.addContact(c); }
+    async deleteContact(id: string) { return this.actor.deleteContact(id); }
+    async getSubscribers() { return this.actor.getSubscribers(); }
+    async addSubscriber(s: any) { return this.actor.addSubscriber(s); }
+    async deleteSubscriber(id: string) { return this.actor.deleteSubscriber(id); }
 }
 export interface CreateActorOptions {
     agent?: Agent;

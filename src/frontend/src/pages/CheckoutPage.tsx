@@ -115,7 +115,6 @@ export default function CheckoutPage() {
   const handleApplyDiscount = async () => {
     setDiscountError("");
     const code = discountCode.trim().toUpperCase();
-    // First check local discounts, then backend
     const localFound = discounts.find((d) => d.code === code && d.active);
     if (localFound) {
       setDiscountApplied({
@@ -140,7 +139,6 @@ export default function CheckoutPage() {
     const currentForm = { ...form };
     const currentPaymentMethod = paymentMethod;
 
-    // Save order to backend
     const orderPayload: bs.FrontendOrder = {
       id: orderNum,
       date: new Date().toISOString(),
@@ -171,7 +169,6 @@ export default function CheckoutPage() {
       console.error("Failed to save order:", err);
     }
 
-    // Fire GA purchase event
     if (typeof window.gtag !== "undefined") {
       window.gtag("event", "purchase", {
         transaction_id: orderNum,
@@ -199,7 +196,7 @@ export default function CheckoutPage() {
     if (!submitted || !savedOrder) return;
     const timer = setTimeout(() => {
       const msg = encodeURIComponent(
-        `Hi ThreadsHub! I just placed an order.\nOrder ID: ${orderNum}\nName: ${savedOrder.form.name}\nPhone: ${savedOrder.form.phone}\nCity: ${savedOrder.form.city}\nTotal: Rs. ${savedOrder.grandTotal.toLocaleString()}\nPayment: ${savedOrder.paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment"}\nPlease confirm my order. Thank you!`,
+        `Hello ThreadsHub 👋\nI have placed an order.\n\nOrder ID: ${orderNum}\nName: ${savedOrder.form.name}\nPhone: ${savedOrder.form.phone}\nCity: ${savedOrder.form.city}\nTotal: Rs. ${savedOrder.grandTotal.toLocaleString()}\nPayment: ${savedOrder.paymentMethod === "cod" ? "Cash on Delivery" : "EasyPaisa / JazzCash"}\n\nPlease confirm my order. Thank you!`,
       );
       window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
     }, 1500);
@@ -223,9 +220,16 @@ export default function CheckoutPage() {
   if (submitted && savedOrder) {
     const { form: sf, grandTotal: sgt, paymentMethod: spm } = savedOrder;
     const waMsg = encodeURIComponent(
-      `Hi ThreadsHub! I just placed an order.\nOrder ID: ${orderNum}\nName: ${sf.name}\nPhone: ${sf.phone}\nCity: ${sf.city}\nTotal: Rs. ${sgt.toLocaleString()}\nPayment: ${spm === "cod" ? "Cash on Delivery" : "Online Payment"}\nPlease confirm my order. Thank you!`,
+      `Hello ThreadsHub 👋\nI have placed an order.\n\nOrder ID: ${orderNum}\nName: ${sf.name}\nPhone: ${sf.phone}\nCity: ${sf.city}\nTotal: Rs. ${sgt.toLocaleString()}\nPayment: ${spm === "cod" ? "Cash on Delivery" : "EasyPaisa / JazzCash"}\n\nPlease confirm my order. Thank you!`,
     );
     const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMsg}`;
+
+    const deliverySteps = [
+      { label: "Order Placed ✓", done: true },
+      { label: "Processing", done: false },
+      { label: "Shipped", done: false },
+      { label: "Delivered", done: false },
+    ];
 
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4 py-16">
@@ -240,51 +244,93 @@ export default function CheckoutPage() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
+            className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
           >
             <CheckCircle className="h-10 w-10 text-green-600" />
           </motion.div>
-          <h1 className="font-display text-3xl font-bold mb-2">
-            Order Confirmed!
+
+          <h1 className="font-display text-3xl font-bold mb-2 text-green-700">
+            🎉 Your Order is Confirmed!
           </h1>
-          <p className="text-muted-foreground font-sans mb-4">
-            Thank you for your order, {sf.name}!
+          <p className="text-muted-foreground font-sans mb-6">
+            Thank you for shopping with ThreadsHub. Your order is being
+            processed and will be delivered in 3–5 business days.
           </p>
-          <div className="bg-secondary/50 rounded-sm p-4 mb-4 text-sm space-y-1">
+
+          {/* Order details */}
+          <div className="bg-secondary/50 rounded-sm p-4 mb-5 text-sm space-y-1 text-left">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Order Number</span>
               <span className="font-mono font-bold text-foreground">
-                {orderNum}
+                #{orderNum}
               </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Name</span>
+              <span className="font-semibold">{sf.name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Phone</span>
+              <span className="font-semibold">{sf.phone}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">City</span>
+              <span className="font-semibold">{sf.city}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Payment</span>
               <span className="font-semibold">
-                {spm === "cod" ? "Cash on Delivery" : "Online Payment"}
+                {spm === "cod" ? "Cash on Delivery" : "EasyPaisa / JazzCash"}
               </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between border-t border-border pt-1 mt-1">
               <span className="text-muted-foreground">Total</span>
-              <span className="font-bold">Rs. {sgt.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Delivery Estimate</span>
-              <span className="font-semibold">3–5 Business Days</span>
+              <span className="font-bold text-base">
+                Rs. {sgt.toLocaleString()}
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-sm p-3 mb-4 text-sm text-blue-700">
-            <Truck className="h-4 w-4 flex-shrink-0" />
-            <p>
-              Your order will be delivered to {sf.city} within 3–5 business
-              days.
+
+          {/* Delivery timeline stepper */}
+          <div className="mb-6">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              Delivery Timeline
             </p>
+            <div className="flex items-center">
+              {deliverySteps.map((step, i) => (
+                <div key={step.label} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center flex-shrink-0">
+                    <div
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                        step.done
+                          ? "bg-green-500 text-white"
+                          : "bg-secondary border-2 border-border text-muted-foreground"
+                      }`}
+                    >
+                      {step.done ? "✓" : i + 1}
+                    </div>
+                    <p
+                      className={`text-[10px] mt-1 text-center leading-tight max-w-[56px] ${
+                        step.done
+                          ? "text-green-700 font-semibold"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {step.label}
+                    </p>
+                  </div>
+                  {i < deliverySteps.length - 1 && (
+                    <div
+                      className={`flex-1 h-0.5 mx-1 mb-4 ${
+                        step.done ? "bg-green-400" : "bg-border"
+                      }`}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-2 bg-green-50 border border-green-100 rounded-sm p-3 mb-6 text-sm text-green-700">
-            <MessageCircle className="h-4 w-4 flex-shrink-0" />
-            <p>
-              A WhatsApp message is opening automatically to confirm your order.
-            </p>
-          </div>
+
           <div className="space-y-3">
             <a
               href={waLink}
@@ -292,9 +338,12 @@ export default function CheckoutPage() {
               rel="noopener noreferrer"
               data-ocid="checkout.whatsapp_button"
             >
-              <Button className="w-full bg-green-600 hover:bg-green-700 text-white gap-2">
+              <Button
+                className="w-full text-white gap-2 font-bold"
+                style={{ backgroundColor: "#25D366" }}
+              >
                 <MessageCircle className="h-4 w-4" />
-                Send Order on WhatsApp
+                Track on WhatsApp 📱
               </Button>
             </a>
             <Link to="/shop">
@@ -303,7 +352,7 @@ export default function CheckoutPage() {
                 className="w-full"
                 data-ocid="checkout.continue_shopping_button"
               >
-                Continue Shopping
+                Continue Shopping →
               </Button>
             </Link>
           </div>
@@ -315,7 +364,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <Link
             to="/cart"
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -327,6 +376,23 @@ export default function CheckoutPage() {
             <Lock className="h-3.5 w-3.5" />
             <span>Secure Checkout</span>
           </div>
+        </div>
+
+        {/* Trust badges strip */}
+        <div className="flex flex-wrap gap-3 justify-center mb-8">
+          {[
+            { icon: "🔒", text: "Secure Checkout" },
+            { icon: "🚚", text: "Delivery in 3–5 days" },
+            { icon: "💯", text: "7-day return guarantee" },
+          ].map((badge) => (
+            <div
+              key={badge.text}
+              className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold px-3 py-1.5 rounded-full"
+            >
+              <span>{badge.icon}</span>
+              <span>{badge.text}</span>
+            </div>
+          ))}
         </div>
 
         <div className="grid lg:grid-cols-[1fr_380px] gap-10">
@@ -420,6 +486,7 @@ export default function CheckoutPage() {
                     onChange={handleChange("name")}
                     placeholder="e.g. Muhammad Ali"
                     data-ocid="checkout.name.input"
+                    autoComplete="name"
                     className="w-full border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
                   />
                   {errors.name && (
@@ -445,6 +512,7 @@ export default function CheckoutPage() {
                     onChange={handleChange("phone")}
                     placeholder="03XXXXXXXXX"
                     data-ocid="checkout.phone.input"
+                    autoComplete="tel"
                     className="w-full border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
                   />
                   {errors.phone && (
@@ -470,6 +538,7 @@ export default function CheckoutPage() {
                     onChange={handleChange("city")}
                     placeholder="e.g. Lahore"
                     data-ocid="checkout.city.input"
+                    autoComplete="address-level2"
                     className="w-full border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
                   />
                   {errors.city && (
@@ -495,6 +564,7 @@ export default function CheckoutPage() {
                     onChange={handleChange("address")}
                     placeholder="House #, Street, Area"
                     data-ocid="checkout.address.input"
+                    autoComplete="street-address"
                     className="w-full border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
                   />
                   {errors.address && (
@@ -538,9 +608,16 @@ export default function CheckoutPage() {
                       Pay when you receive your order
                     </p>
                   </div>
-                  <span className="text-xs font-semibold text-green-600">
-                    Most Popular
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {paymentMethod === "cod" && (
+                      <span className="text-xs font-bold text-green-700 bg-green-100 border border-green-300 px-2 py-0.5 rounded-full">
+                        ✓ Selected
+                      </span>
+                    )}
+                    <span className="text-xs font-semibold text-green-600">
+                      Most Popular
+                    </span>
+                  </div>
                 </button>
 
                 <button
@@ -569,6 +646,11 @@ export default function CheckoutPage() {
                       share screenshot on WhatsApp
                     </p>
                   </div>
+                  {paymentMethod === "card" && (
+                    <span className="text-xs font-bold text-green-700 bg-green-100 border border-green-300 px-2 py-0.5 rounded-full flex-shrink-0">
+                      ✓ Selected
+                    </span>
+                  )}
                 </button>
               </div>
 

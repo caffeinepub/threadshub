@@ -199,7 +199,9 @@ export default function CartPage() {
             <Separator className="my-4" />
             <div className="flex justify-between font-sans font-bold text-base mb-2">
               <span>Subtotal</span>
-              <span>Rs. {cartTotal.toLocaleString()}</span>
+              <span className="text-xl font-bold text-foreground">
+                Rs. {cartTotal.toLocaleString()}
+              </span>
             </div>
             <div className="flex justify-between text-sm font-sans text-muted-foreground mb-6">
               <span>Shipping</span>
@@ -220,11 +222,14 @@ export default function CartPage() {
             </div>
             <Link to="/checkout">
               <Button
-                className="w-full mt-6 bg-primary text-primary-foreground hover:opacity-90 rounded-sm uppercase tracking-widest text-sm gap-2"
+                className="w-full mt-6 bg-primary text-primary-foreground hover:opacity-90 rounded-sm uppercase tracking-widest text-sm gap-2 min-h-[48px] font-bold"
                 data-ocid="cart.checkout.primary_button"
               >
                 Checkout <ArrowRight className="h-4 w-4" />
               </Button>
+              <p className="text-center text-xs text-muted-foreground mt-2">
+                🔒 Secure Checkout | 🚚 Fast Delivery
+              </p>
             </Link>
           </div>
         </div>

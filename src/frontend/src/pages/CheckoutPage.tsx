@@ -484,13 +484,13 @@ export default function CheckoutPage() {
               <h2 className="font-display text-xl font-bold">
                 Delivery Information
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="sm:col-span-2">
                   <label
                     className="block text-sm font-medium mb-1"
                     htmlFor="name"
                   >
-                    Full Name *
+                    Full Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="name"
@@ -500,7 +500,7 @@ export default function CheckoutPage() {
                     placeholder="e.g. Muhammad Ali"
                     data-ocid="checkout.name.input"
                     autoComplete="name"
-                    className="w-full border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
+                    className="w-full border border-border rounded-sm px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
                   />
                   {errors.name && (
                     <p
@@ -516,7 +516,7 @@ export default function CheckoutPage() {
                     className="block text-sm font-medium mb-1"
                     htmlFor="phone"
                   >
-                    Phone Number *
+                    Phone Number <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="phone"
@@ -526,7 +526,7 @@ export default function CheckoutPage() {
                     placeholder="03XXXXXXXXX"
                     data-ocid="checkout.phone.input"
                     autoComplete="tel"
-                    className="w-full border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
+                    className="w-full border border-border rounded-sm px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
                   />
                   {errors.phone && (
                     <p
@@ -542,7 +542,7 @@ export default function CheckoutPage() {
                     className="block text-sm font-medium mb-1"
                     htmlFor="city"
                   >
-                    City *
+                    City <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="city"
@@ -552,7 +552,7 @@ export default function CheckoutPage() {
                     placeholder="e.g. Lahore"
                     data-ocid="checkout.city.input"
                     autoComplete="address-level2"
-                    className="w-full border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
+                    className="w-full border border-border rounded-sm px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
                   />
                   {errors.city && (
                     <p
@@ -568,7 +568,7 @@ export default function CheckoutPage() {
                     className="block text-sm font-medium mb-1"
                     htmlFor="address"
                   >
-                    Full Address *
+                    Full Address <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="address"
@@ -578,7 +578,7 @@ export default function CheckoutPage() {
                     placeholder="House #, Street, Area"
                     data-ocid="checkout.address.input"
                     autoComplete="street-address"
-                    className="w-full border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
+                    className="w-full border border-border rounded-sm px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
                   />
                   {errors.address && (
                     <p
@@ -695,6 +695,12 @@ export default function CheckoutPage() {
               )}
             </div>
 
+            {/* Estimated Delivery */}
+            <div className="flex items-center gap-2 text-sm text-green-700 font-medium bg-green-50 border border-green-200 rounded-sm px-3 py-2">
+              <span>🚚</span>
+              <span>Estimated Delivery: 3–5 Days</span>
+            </div>
+
             {/* Discount Code */}
             <div className="space-y-2">
               <h3 className="font-semibold text-sm">Discount Code</h3>
@@ -725,7 +731,7 @@ export default function CheckoutPage() {
                     }}
                     placeholder="Enter code (e.g. FIRST10)"
                     data-ocid="checkout.discount.input"
-                    className="flex-1 border border-border rounded-sm px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
+                    className="flex-1 border border-border rounded-sm px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
                   />
                   <Button
                     type="button"
@@ -748,10 +754,25 @@ export default function CheckoutPage() {
               )}
             </div>
 
+            <div className="flex flex-wrap gap-2 justify-center py-3">
+              {[
+                { icon: "🔒", text: "Secure Payment" },
+                { icon: "🚚", text: "Cash on Delivery Available" },
+                { icon: "↩️", text: "7 Days Exchange" },
+              ].map((b) => (
+                <span
+                  key={b.text}
+                  className="flex items-center gap-1 text-xs bg-secondary px-2.5 py-1.5 rounded-full text-muted-foreground font-medium"
+                >
+                  <span>{b.icon}</span>
+                  {b.text}
+                </span>
+              ))}
+            </div>
             <Button
               type="submit"
               data-ocid="checkout.submit_button"
-              className="w-full bg-primary text-primary-foreground hover:opacity-90 font-bold uppercase tracking-widest text-sm py-4 gap-2 rounded-sm"
+              className="w-full bg-primary text-primary-foreground hover:opacity-90 font-bold uppercase tracking-widest text-sm py-4 gap-2 rounded-sm shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all min-h-[52px]"
             >
               <ShieldCheck className="h-4 w-4" />
               Place Order — Rs. {grandTotal.toLocaleString()}
@@ -812,6 +833,12 @@ export default function CheckoutPage() {
                   <div className="flex justify-between text-green-600">
                     <span>Discount</span>
                     <span>-Rs. {discountAmount.toLocaleString()}</span>
+                  </div>
+                )}
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-green-700 font-bold text-sm bg-green-50 rounded px-2 py-1">
+                    <span>🎉 You saved</span>
+                    <span>Rs. {discountAmount.toLocaleString()}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-base border-t border-border pt-2">

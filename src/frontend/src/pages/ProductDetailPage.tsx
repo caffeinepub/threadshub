@@ -663,6 +663,29 @@ export default function ProductDetailPage() {
         visible={stickyVisible}
       />
 
+      {/* Mobile Buy Now sticky bar — always visible on mobile */}
+      <div
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-border px-4 py-3 shadow-lg"
+        data-ocid="product.buy_now.button"
+      >
+        <button
+          type="button"
+          onClick={() => {
+            if (ctaRef.current) {
+              ctaRef.current.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            } else {
+              handleAddToCart();
+            }
+          }}
+          className="min-h-[48px] w-full bg-[#8B3A2F] text-white font-bold rounded-sm text-sm tracking-widest uppercase hover:opacity-90 transition-opacity"
+        >
+          Buy Now ⚡
+        </button>
+      </div>
+
       {/* ── Full-bleed hero image ─────────────────────────────────────── */}
       <div
         className="relative w-full overflow-hidden bg-black"
@@ -779,7 +802,7 @@ export default function ProductDetailPage() {
       </div>
 
       {/* ── Product Details ─────────────────────────────────────────────── */}
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-24">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-24 md:pb-24 pb-[100px]">
         {/* Compact rating */}
         <div className="flex items-center gap-1 pt-4 pb-1 text-xs text-muted-foreground">
           <Star className="h-3 w-3 fill-amber-400 text-amber-400 flex-shrink-0" />
@@ -1098,20 +1121,20 @@ export default function ProductDetailPage() {
         {/* Why Choose This Product */}
         <div className="mb-6 p-4 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
           <h3 className="font-display text-base font-bold text-foreground mb-3">
-            ✨ Why Choose This Product
+            ✨ Why Customers Love This
           </h3>
           <ul className="space-y-2">
             {[
-              "Premium fabric quality",
+              "Premium breathable fabric",
               "Comfortable all-day wear",
-              "Perfect for occasions",
-              "Durable stitching",
+              "Perfect for Eid & occasions",
+              "Durable fine stitching",
             ].map((point) => (
               <li
                 key={point}
                 className="flex items-center gap-2 text-sm text-foreground"
               >
-                <span className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs flex-shrink-0">
+                <span className="w-5 h-5 rounded-full bg-[#8B3A2F] text-white flex items-center justify-center text-xs flex-shrink-0">
                   ✓
                 </span>
                 {point}

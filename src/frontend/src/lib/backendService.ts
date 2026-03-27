@@ -221,6 +221,23 @@ export async function saveOrder(o: FrontendOrder): Promise<string> {
   return actor.addOrder(toBackendOrder(o));
 }
 
+export async function fetchOrderById(
+  id: string,
+): Promise<FrontendOrder | null> {
+  try {
+    const actor = await getActor();
+    const result: [] | [import("@/backend.d").Order] =
+      await actor.getOrderById(id);
+    if (Array.isArray(result) && result.length > 0 && result[0]) {
+      return fromBackendOrder(result[0]);
+    }
+    return null;
+  } catch (err) {
+    console.error("fetchOrderById failed:", err);
+    return null;
+  }
+}
+
 export async function changeOrderStatus(
   id: string,
   status: string,

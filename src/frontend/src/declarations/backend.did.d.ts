@@ -110,6 +110,7 @@ export interface _SERVICE {
   bulkImportProducts: ActorMethod<[Product[]], bigint>;
   seedProducts: ActorMethod<[Product[]], undefined>;
   getOrders: ActorMethod<[], Order[]>;
+  getOrderById: ActorMethod<[string], [] | [Order]>;
   addOrder: ActorMethod<[Order], string>;
   updateOrderStatus: ActorMethod<[string, string], boolean>;
   getSettings: ActorMethod<[], Settings>;

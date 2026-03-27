@@ -177,6 +177,12 @@ persistent actor {
     orders
   };
 
+  public query func getOrderById(id : Text) : async ?Order {
+    Array.find(orders, func(o : Order) : Bool {
+      Text.toLowercase(o.id) == Text.toLowercase(id)
+    })
+  };
+
   public func addOrder(o : Order) : async Text {
     orders := Array.append(orders, [o]);
     o.id

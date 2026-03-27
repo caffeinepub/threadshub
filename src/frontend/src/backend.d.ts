@@ -118,6 +118,7 @@ export interface backendInterface {
     bulkImportProducts(products: Product[]): Promise<bigint>;
     seedProducts(products: Product[]): Promise<void>;
     getOrders(): Promise<Order[]>;
+    getOrderById(id: string): Promise<[] | [Order]>;
     addOrder(order: Order): Promise<string>;
     updateOrderStatus(id: string, status: string): Promise<boolean>;
     getSettings(): Promise<Settings>;

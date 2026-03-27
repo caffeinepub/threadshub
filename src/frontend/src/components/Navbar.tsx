@@ -555,47 +555,47 @@ function TrackOrderModal({
   onClose,
 }: { open: boolean; onClose: () => void }) {
   const [orderId, setOrderId] = useState("");
-  const [contact, setContact] = useState("");
+  const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<OrderRecord | "not_found" | null>(null);
 
-  const handleTrack = (e: React.FormEvent) => {
+  const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
-    bs.fetchOrders()
-      .then((orders) => {
-        const found = orders.find(
-          (o) =>
-            o.id.toLowerCase() === orderId.trim().toLowerCase() &&
-            (o.phone.includes(contact.trim()) ||
-              (o.email || "")
-                .toLowerCase()
-                .includes(contact.trim().toLowerCase())),
-        );
-        if (found) {
-          setResult({
-            id: found.id,
-            phone: found.phone,
-            email: found.email,
-            total: found.grandTotal,
-            status: found.status as OrderStatus,
-            items: found.items.map((i) => ({
-              name: i.productName,
-              qty: i.qty,
-              price: i.price,
-            })),
-            createdAt: found.date,
-            name: found.customerName,
-            city: found.city,
-          });
-        } else {
-          setResult("not_found");
-        }
-      })
-      .catch(() => setResult("not_found"));
+    const trimmed = orderId.trim().replace(/^#+/, "");
+    console.log("[TrackOrder] Searching for order ID:", trimmed);
+    if (!trimmed) return;
+    setLoading(true);
+    try {
+      const found = await bs.fetchOrderById(trimmed);
+      if (found) {
+        setResult({
+          id: found.id,
+          phone: found.phone,
+          email: found.email,
+          total: found.grandTotal,
+          status: found.status as OrderStatus,
+          items: found.items.map((i) => ({
+            name: i.productName,
+            qty: i.qty,
+            price: i.price,
+          })),
+          createdAt: found.date,
+          name: found.customerName,
+          city: found.city,
+        });
+      } else {
+        console.log("[TrackOrder] No order found for ID:", trimmed);
+        setResult("not_found");
+      }
+    } catch (err) {
+      console.error("[TrackOrder] Error fetching order:", err);
+      setResult("not_found");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClose = () => {
     setOrderId("");
-    setContact("");
     setResult(null);
     onClose();
   };
@@ -646,29 +646,23 @@ function TrackOrderModal({
                 {!result ? (
                   <form onSubmit={handleTrack} className="flex flex-col gap-3">
                     <p className="text-muted-foreground text-sm mb-2">
-                      Enter your details below to check your order status.
+                      Enter your Order ID to check your order status.
                     </p>
                     <input
                       required
                       value={orderId}
                       onChange={(e) => setOrderId(e.target.value)}
-                      placeholder="Enter your Order ID (e.g. TH-1234)"
+                      placeholder="Enter your Order ID (e.g. TH-123456)"
                       data-ocid="track_order.input"
-                      className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <input
-                      required
-                      value={contact}
-                      onChange={(e) => setContact(e.target.value)}
-                      placeholder="Enter email or phone number used at checkout"
                       className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                     <button
                       type="submit"
+                      disabled={loading}
                       data-ocid="track_order.submit_button"
-                      className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl hover:opacity-90 transition-opacity text-sm"
+                      className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl hover:opacity-90 transition-opacity text-sm disabled:opacity-60"
                     >
-                      Track Order
+                      {loading ? "Searching..." : "Track Order"}
                     </button>
                   </form>
                 ) : result === "not_found" ? (
@@ -681,7 +675,7 @@ function TrackOrderModal({
                       Order not found
                     </h3>
                     <p className="text-muted-foreground text-sm mb-4">
-                      Please check your Order ID and contact details.
+                      Order not found. Please contact WhatsApp support.
                     </p>
                     <div className="flex gap-2 justify-center flex-wrap">
                       <button

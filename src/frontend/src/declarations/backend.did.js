@@ -101,6 +101,7 @@ export const idlFactory = ({ IDL }) => {
     bulkImportProducts: IDL.Func([IDL.Vec(Product)], [IDL.Nat], []),
     seedProducts: IDL.Func([IDL.Vec(Product)], [], []),
     getOrders: IDL.Func([], [IDL.Vec(Order)], ['query']),
+    getOrderById: IDL.Func([IDL.Text], [IDL.Opt(Order)], ['query']),
     addOrder: IDL.Func([Order], [IDL.Text], []),
     updateOrderStatus: IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
     getSettings: IDL.Func([], [Settings], ['query']),

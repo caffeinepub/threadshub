@@ -163,10 +163,23 @@ export default function CheckoutPage() {
       discountAmount,
     };
 
+    console.log(
+      "[Checkout] Saving order to backend:",
+      orderPayload.id,
+      orderPayload,
+    );
     try {
-      await bs.saveOrder(orderPayload);
+      const savedId = await bs.saveOrder(orderPayload);
+      console.log("[Checkout] Order saved successfully with ID:", savedId);
     } catch (err) {
-      console.error("Failed to save order:", err);
+      console.error("[Checkout] Failed to save order to backend:", err);
+      // Retry once
+      try {
+        await bs.saveOrder(orderPayload);
+        console.log("[Checkout] Order saved on retry:", orderPayload.id);
+      } catch (err2) {
+        console.error("[Checkout] Retry also failed:", err2);
+      }
     }
 
     if (typeof window.gtag !== "undefined") {

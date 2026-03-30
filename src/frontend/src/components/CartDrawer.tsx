@@ -159,6 +159,7 @@ export default function CartDrawer() {
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5">
                             Size: {item.size}
+                            {item.color ? ` · ${item.color}` : ""}
                           </p>
                           <p className="text-sm font-bold text-primary mt-1">
                             Rs. {(price * item.qty).toLocaleString()}

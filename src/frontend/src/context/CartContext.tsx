@@ -4,13 +4,19 @@ import { type ReactNode, createContext, useContext, useState } from "react";
 export interface CartItem {
   product: Product;
   size: string;
+  color?: string;
   qty: number;
   cartKey: string;
 }
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (product: Product, size: string, qty: number) => void;
+  addToCart: (
+    product: Product,
+    size: string,
+    qty: number,
+    color?: string,
+  ) => void;
   removeFromCart: (cartKey: string) => void;
   updateQty: (cartKey: string, qty: number) => void;
   clearCart: () => void;
@@ -27,8 +33,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
 
-  const addToCart = (product: Product, size: string, qty: number) => {
-    const cartKey = `${product.id}-${size}`;
+  const addToCart = (
+    product: Product,
+    size: string,
+    qty: number,
+    color?: string,
+  ) => {
+    const cartKey = `${product.id}-${size}-${color ?? ""}`;
     setCartItems((prev) => {
       const existing = prev.find((i) => i.cartKey === cartKey);
       if (existing) {
@@ -36,7 +47,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           i.cartKey === cartKey ? { ...i, qty: i.qty + qty } : i,
         );
       }
-      return [...prev, { product, size, qty, cartKey }];
+      return [...prev, { product, size, color, qty, cartKey }];
     });
   };
 

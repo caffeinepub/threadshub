@@ -16,12 +16,16 @@ interface CartContextType {
   clearCart: () => void;
   cartCount: number;
   cartTotal: number;
+  cartOpen: boolean;
+  openCart: () => void;
+  closeCart: () => void;
 }
 
 const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
 
   const addToCart = (product: Product, size: string, qty: number) => {
     const cartKey = `${product.id}-${size}`;
@@ -52,9 +56,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => setCartItems([]);
 
+  const openCart = () => setCartOpen(true);
+  const closeCart = () => setCartOpen(false);
+
   const cartCount = cartItems.reduce((acc, i) => acc + i.qty, 0);
   const cartTotal = cartItems.reduce(
-    (acc, i) => acc + i.product.price * i.qty,
+    (acc, i) => acc + (i.product.discountPrice ?? i.product.price) * i.qty,
     0,
   );
 
@@ -68,6 +75,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         cartCount,
         cartTotal,
+        cartOpen,
+        openCart,
+        closeCart,
       }}
     >
       {children}

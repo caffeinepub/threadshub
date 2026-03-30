@@ -1,4 +1,5 @@
 import AnnouncementBar from "@/components/AnnouncementBar";
+import CartDrawer from "@/components/CartDrawer";
 import { useCart } from "@/context/CartContext";
 import { useStore } from "@/context/StoreContext";
 import * as bs from "@/lib/backendService";
@@ -808,7 +809,7 @@ function TrackOrderModal({
 
 // ─── Main Navbar ──────────────────────────────────────────────────────────────
 export default function Navbar() {
-  const { cartCount } = useCart();
+  const { cartCount, openCart } = useCart();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -974,8 +975,9 @@ export default function Navbar() {
               <Mail className="h-5 w-5" />
             </button>
 
-            <Link
-              to="/cart"
+            <button
+              type="button"
+              onClick={openCart}
               data-ocid="nav.cart_button"
               className={`relative p-2 transition-colors ${iconColor}`}
             >
@@ -991,7 +993,7 @@ export default function Navbar() {
                   {cartCount > 9 ? "9+" : cartCount}
                 </span>
               )}
-            </Link>
+            </button>
           </div>
         </nav>
       </header>
@@ -1141,6 +1143,7 @@ export default function Navbar() {
         open={trackModalOpen}
         onClose={() => setTrackModalOpen(false)}
       />
+      <CartDrawer />
     </>
   );
 }

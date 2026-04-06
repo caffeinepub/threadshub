@@ -392,3 +392,30 @@ export async function removeSubscriber(id: string): Promise<void> {
 export function generateProductId(): string {
   return `prod_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
+
+/**
+ * Decrement product stock and increment soldCount after a successful order.
+ * Called from CheckoutPage after saveOrder succeeds.
+ * Silently fails -- order is already saved so this is best-effort.
+ */
+export async function decrementProductsStock(
+  items: { productId: string; qty: number }[],
+): Promise<void> {
+  try {
+    const allProducts = await fetchProducts();
+    await Promise.all(
+      items.map(async ({ productId, qty }) => {
+        const product = allProducts.find((p) => p.id === productId);
+        if (!product) return;
+        const updated: FrontendProduct = {
+          ...product,
+          stock: Math.max(0, (product.stock ?? 0) - qty),
+          soldCount: (product.soldCount ?? 0) + qty,
+        };
+        await saveProduct(updated, false);
+      }),
+    );
+  } catch (err) {
+    console.error("[decrementProductsStock] failed:", err);
+  }
+}

@@ -1,6 +1,6 @@
 import { Flame } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const NOTIFICATIONS = [
   "Ali from Lahore just bought Classic Oxford Shirt",
@@ -8,11 +8,15 @@ const NOTIFICATIONS = [
   "Bilal from Islamabad just bought Slim Fit Denim",
   "Sara from Faisalabad just ordered Boys Polo Shirt",
   "Ahmed from Peshawar just bought Baby Onesie Set",
+  "Zara from Multan just ordered Premium Lawn Suit",
+  "Hassan from Rawalpindi just bought Kids Kurta Set",
 ];
 
 export default function SocialProofNotification() {
   const [current, setCurrent] = useState<number | null>(null);
   const [visible, setVisible] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let index = 0;
@@ -21,20 +25,20 @@ export default function SocialProofNotification() {
       setCurrent(index % NOTIFICATIONS.length);
       setVisible(true);
       index++;
-
-      // Hide after 4s
-      setTimeout(() => setVisible(false), 4000);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = setTimeout(() => setVisible(false), 4000);
     };
 
-    // First show after 3s delay
     const initialTimer = setTimeout(() => {
       show();
-      // Then every 8s
-      const interval = setInterval(show, 8000);
-      return () => clearInterval(interval);
+      intervalRef.current = setInterval(show, 8000);
     }, 3000);
 
-    return () => clearTimeout(initialTimer);
+    return () => {
+      clearTimeout(initialTimer);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    };
   }, []);
 
   return (

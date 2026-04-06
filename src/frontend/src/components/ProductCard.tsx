@@ -3,7 +3,7 @@ import type { Product } from "@/data/products";
 import { Link } from "@tanstack/react-router";
 import { ShoppingBag, Star } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { memo, useState } from "react";
 import QuickAddModal from "./QuickAddModal";
 
 interface ProductCardProps {
@@ -11,7 +11,10 @@ interface ProductCardProps {
   index?: number;
 }
 
-export default function ProductCard({ product, index = 0 }: ProductCardProps) {
+const ProductCard = memo(function ProductCard({
+  product,
+  index = 0,
+}: ProductCardProps) {
   const [modalOpen, setModalOpen] = useState(false);
 
   const hasDiscount =
@@ -157,4 +160,5 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       />
     </>
   );
-}
+});
+export default ProductCard;

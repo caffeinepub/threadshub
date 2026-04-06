@@ -168,15 +168,24 @@ export default function CheckoutPage() {
       orderPayload.id,
       orderPayload,
     );
+    // Build stock decrement list before clearing cart
+    const stockDecrements = cartItems.map((i) => ({
+      productId: i.product.id,
+      qty: i.qty,
+    }));
+
     try {
       const savedId = await bs.saveOrder(orderPayload);
       console.log("[Checkout] Order saved successfully with ID:", savedId);
+      // Decrement stock in background (best-effort)
+      bs.decrementProductsStock(stockDecrements).catch(() => {});
     } catch (err) {
       console.error("[Checkout] Failed to save order to backend:", err);
       // Retry once
       try {
         await bs.saveOrder(orderPayload);
         console.log("[Checkout] Order saved on retry:", orderPayload.id);
+        bs.decrementProductsStock(stockDecrements).catch(() => {});
       } catch (err2) {
         console.error("[Checkout] Retry also failed:", err2);
       }

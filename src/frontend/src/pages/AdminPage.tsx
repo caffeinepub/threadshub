@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { useStore } from "@/context/StoreContext";
 import type { Product } from "@/data/products";
 import * as bs from "@/lib/backendService";
 import type {
@@ -2660,6 +2661,7 @@ function AnalyticsSection() {
 
 // ─── Settings ────────────────────────────────────────────────────────────────
 function SettingsSection() {
+  const { refetchSettings } = useStore();
   const [form, setForm] = useState<StoreSettings>(() => ({
     storeName: "ThreadsHub",
     whatsappNumber: "03174933882",
@@ -2685,6 +2687,8 @@ function SettingsSection() {
     setSaving(true);
     try {
       await bs.updateSettings(form);
+      // Refresh StoreContext so AnnouncementBar/Popup get new codes immediately
+      await refetchSettings();
       toast.success("Settings saved successfully");
     } catch {
       toast.error("Failed to save settings");
